@@ -4,19 +4,13 @@ import { PythonReport } from "./run_python";
 
 export interface ValuePropositionData {
     titulo_proposta: string;
-    frase_gancho: string;
-    diagnostico_resumido: string;
-    proposta_valor_grooway: string;
-    por_que_agora: string;
-    provas_sociais_placeholder: string[];
-    servicos_propostos: {
-        nome: string;
-        descricao: string;
-        resultado_esperado: string;
-        urgencia: string;
-    }[];
-    investimento_estimado: string;
-    proximo_passo: string;
+    bloco1_apresentacao: string;
+    bloco2_cenario_atual: string;
+    bloco3_estrategia: string;
+    bloco4_escopo: string;
+    bloco5_cronograma: string;
+    bloco6_resultados: string;
+    bloco7_investimentos_condicoes: string;
     assinatura_consultor: string;
 }
 

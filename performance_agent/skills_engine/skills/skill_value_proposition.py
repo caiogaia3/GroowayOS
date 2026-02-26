@@ -28,21 +28,25 @@ class ValuePropositionSkill(PredatorSkill):
             "score": 100,
             "findings": {
                 "titulo_proposta": "",
-                "frase_gancho": "",
-                "diagnostico_resumido": "",
-                "proposta_valor_grooway": "",
-                "por_que_agora": "",
-                "provas_sociais_placeholder": [],
-                "servicos_propostos": [],
-                "investimento_estimado": "",
-                "proximo_passo": "",
+                "contexto_problema": "",
+                "custo_inacao": "",
+                "solucao_customizada": "",
+                "valor_gerado_roi": "",
+                "investimento_pacotes": "",
+                "mitigacao_risco": "",
+                "proximos_passos": "",
                 "assinatura_consultor": ""
             },
             "critical_pains": []
         }
 
+        pains = report.get("critical_pains", [])
+        if not isinstance(pains, list):
+            pains = []
+            report["critical_pains"] = pains
+
         if not self.api_key:
-            report["critical_pains"].append("API Key Gemini não configurada.")
+            pains.append("API Key Gemini não configurada.")
             return report
 
         try:
@@ -61,7 +65,7 @@ class ValuePropositionSkill(PredatorSkill):
                     bb = agent_data.get("boss_briefing", {})
                     findings = agent_data.get("findings", {})
                     score = agent_data.get("score", "?")
-                    pains = agent_data.get("critical_pains", [])
+                    agent_pains = agent_data.get("critical_pains", [])
 
                     # Extrai o veredito e plano do CMO especificamente
                     if "Senior CMO" in agent_name or "Boss" in agent_name.title():
@@ -79,8 +83,8 @@ class ValuePropositionSkill(PredatorSkill):
                         agent_section += "POSITIVOS:\n" + "\n".join([f"  ✅ {p}" for p in pos]) + "\n"
                     if brechas:
                         agent_section += "BRECHAS:\n" + "\n".join([f"  💡 {b}" for b in brechas]) + "\n"
-                    if pains:
-                        agent_section += "DORES:\n" + "\n".join([f"  🔴 {p}" for p in pains]) + "\n"
+                    if agent_pains:
+                        agent_section += "DORES:\n" + "\n".join([f"  🔴 {p}" for p in agent_pains]) + "\n"
 
                     all_briefings += agent_section
             else:
@@ -91,13 +95,17 @@ class ValuePropositionSkill(PredatorSkill):
             client = genai.Client(api_key=self.api_key)
 
             prompt = f"""
-            Você é o Diretor de Crescimento da GROOWAY — uma agência premium de marketing digital brasileira.
+            Você é um Especialista de Elite em Propostas Comerciais B2B, Diretor de Crescimento da GROOWAY e um "Engenheiro de Valor".
+            Sua missão é ajudar a Grooway a transformar orçamentos simples e PDFs genéricos em 'casos de fechamento' altamente persuasivos e focados na conversão.
+            
+            Mentalidade e Filosofia Obrigatória:
+            1. A proposta não é sobre a Grooway, é sobre o problema do cliente.
+            2. O preço deve ser a consequência lógica do valor gerado (ROI).
+            3. Use a metodologia Value Proposition Canvas (Dores, Ganhos vs Aliviadores de Dor, Criadores de Ganho).
+            4. Não liste apenas features; venda resultados, mitigação de riscos e impacto em lucro/caixa.
             
             Você acabou de realizar um diagnóstico profundo e gratuito do digital da empresa "{company_name}" (localizada em {city}).
-            
-            Seu objetivo agora é redigir uma PROPOSTA DE VALOR IRRESISTÍVEL que convença o dono dessa empresa a contratar os serviços da Grooway.
-            
-            A proposta deve ser PERSUASIVA, ESPECÍFICA (com base NOS DADOS REAIS do diagnóstico) e com SENSO DE URGÊNCIA.
+            Seu objetivo é redigir essa PROPOSTA DE VALOR com base na seguinte arquitetura de 7 Blocos Lógicos de Persuasão:
             
             ========== DIAGNÓSTICO COMPLETO ==========
             {all_briefings}
@@ -111,37 +119,24 @@ class ValuePropositionSkill(PredatorSkill):
             {cmo_plan_str}
             =============================================
             
-            ESTRUTURA DA PROPOSTA (responda em JSON puro, sem markdown):
+            ESTRUTURA DA PROPOSTA DE SAÍDA (Obrigatório em JSON puro, sem markdown block):
             {{
-                "titulo_proposta": "Ex: Proposta Estratégica de Crescimento Digital — {company_name}",
-                "frase_gancho": "Uma frase de impacto máximo (1-2 linhas) que provoque o empresário com os dados mais críticos do diagnóstico. Mostre que ele está perdendo dinheiro AGORA.",
-                "diagnostico_resumido": "Resumo executivo de 3-4 frases sobre o estado atual do digital da empresa, baseado exclusivamente nos dados dos agentes. Tom: direto, sem julgamentos, mas revelando as brechas.",
-                "proposta_valor_grooway": "Parágrafo de 3-5 frases descrevendo O QUE a Grooway vai fazer, COMO vai resolver cada falha crítica detectada e QUAL TRANSFORMAÇÃO o cliente vai viver. Use os dados reais.",
-                "por_que_agora": "2-3 frases criando urgência real baseada nos dados: por que adiar é custoso? Mencione concorrentes, oportunidades sazonais, algoritmos, etc. Baseado nos dados do diagnóstico.",
-                "provas_sociais_placeholder": [
-                    "Placeholder para prova social 1 (ex: 'Cliente do setor X saiu de 0 para Y leads/mês em Z meses')",
-                    "Placeholder para prova social 2",
-                    "Placeholder para prova social 3"
-                ],
-                "servicos_propostos": [
-                    {{
-                        "nome": "Nome do Serviço",
-                        "descricao": "O que inclui em 1-2 frases práticas",
-                        "resultado_esperado": "Resultado concreto e mensurável esperado para esse cliente específico",
-                        "urgencia": "Por que esse serviço é crítico AGORA para essa empresa"
-                    }}
-                ],
-                "investimento_estimado": "Frase posicionando o investimento como ROI, não custo. Ex: 'O investimento neste programa é a partir de R$ X/mês — menos do que o custo de 1 lead perdido por dia para a concorrência.' Adapte ao porte e setor da empresa.",
-                "proximo_passo": "CTA claro e urgente: o que o empresário deve fazer AGORA para avançar. Ex: 'Agende sua Sessão Estratégica de 30 minutos com nosso time...'",
-                "assinatura_consultor": "Ex: 'Equipe Grooway | Marketing de Performance | grooway.com.br'"
+                "titulo_proposta": "Persuasivo e focado no ganho principal. Ex: Projeto de Estruturação Digital e Aquisição para a {company_name}",
+                "bloco1_apresentacao": "BLOCO 1: Apresentação Institucional. Breve explicação da atuação (ex: focado em resultados, parceiro estratégico, estrutura previsibilidade comercial e crescimento consistente).",
+                "bloco2_cenario_atual": "BLOCO 2: Entendimento do Cenário Atual. Recapitule a dor mapeada no diagnóstico. Mostre profunda empatia (ex: ausência de estrutura de marketing ativa, dependência de indicações).",
+                "bloco3_estrategia": "BLOCO 3: Estratégia Proposta. A arquitetura da solução. Relacione a solução para resolver o cenário atual. Ex: Estruturar ecossistema digital com foco em autoridade, captação e dados.",
+                "bloco4_escopo": "BLOCO 4: Escopo de Entrega (Módulos Integrados). Descreva os serviços/módulos baseados no plano comercial sugerido (ex: Tráfego Pago, Site de Conversão, Google Meu Negócio, Conteúdo Estratégico). Formate como uma descrição fluida baseada no plano.",
+                "bloco5_cronograma": "BLOCO 5: Cronograma de Execução. Etapas típicas: Setup (semana 1-2), Ativação (semana 3), Otimizações (contínuo).",
+                "bloco6_resultados": "BLOCO 6: Resultados Esperados. Aonde queremos chegar. Ex: Presença profissional, captação ativa, leads qualificados, base para escala. Compare a situação ruim atual com o cenário próspero de curto e médio prazo.",
+                "bloco7_investimentos_condicoes": "BLOCO 7: Investimento e Condições. Apresentar estimativa baseada nos serviços. Retorne como um texto persuasivo em parágrafos ou listas, com pacotes/módulos se aplicável. NÃO coloque valores específicos quebrados, apenas informe que o projeto completo se inicia a partir de R$ 3.000,00 mensais.",
+                "assinatura_consultor": "Ex: 'Equipe Grooway | Marketing de Performance & Crescimento B2B'"
             }}
             
-            REGRAS:
-            - Use SOMENTE dados comprovados pelos agentes. ZERO invenção.
-            - Tom: consultivo, premium, direto e com senso de urgência.
-            - O cliente deve sentir que você sabe EXATAMENTE o problema dele.
-            - Em português (pt-BR) fluente e profissional.
-            - Retorne APENAS o JSON puro, sem formatação markdown.
+            REGRAS DE TOM E ESTILO:
+            - Tom: Consultivo, direto, autoritário (sem ser arrogante), persuasivo e empático.
+            - Evite jargões excessivos e linguagem rebuscada.
+            - Use frases curtas, listas (bullet points com hífen se for texto normal) e parágrafos curtos para facilitar a escaneabilidade.
+            - Retorne APENAS o JSON puro. Não inicie com ```json nem termine com ```.
             """
 
             response = client.models.generate_content(
@@ -157,7 +152,7 @@ class ValuePropositionSkill(PredatorSkill):
                 json_data = json.loads(response.text)
                 report["findings"] = json_data
             else:
-                report["critical_pains"].append("Gemini não retornou proposta de valor.")
+                pains.append("Gemini não retornou proposta de valor.")
 
         except Exception as e:
             error_str = str(e)
@@ -180,12 +175,12 @@ class ValuePropositionSkill(PredatorSkill):
                             json_data = json.loads(raw_text)
                             report["findings"] = json_data
                         else:
-                            report["critical_pains"].append("Fallback OpenAI: Resposta vazia.")
+                            pains.append("Fallback OpenAI: Resposta vazia.")
                     except Exception as fallback_e:
-                        report["critical_pains"].append(f"Falha na geração da proposta de valor: {fallback_e}")
+                        pains.append(f"Falha na geração da proposta de valor: {fallback_e}")
                 else:
-                    report["critical_pains"].append("Limite da IA atingido. Tente novamente em breve.")
+                    pains.append("Limite da IA atingido. Tente novamente em breve.")
             else:
-                report["critical_pains"].append(f"Erro na geração da proposta de valor: {e}")
+                pains.append(f"Erro na geração da proposta de valor: {e}")
 
         return report
