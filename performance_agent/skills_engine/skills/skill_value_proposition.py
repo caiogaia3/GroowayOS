@@ -95,17 +95,16 @@ class ValuePropositionSkill(PredatorSkill):
             client = genai.Client(api_key=self.api_key)
 
             prompt = f"""
-            Você é um Especialista de Elite em Propostas Comerciais B2B, Diretor de Crescimento da GROOWAY e um "Engenheiro de Valor".
-            Sua missão é ajudar a Grooway a transformar orçamentos simples e PDFs genéricos em 'casos de fechamento' altamente persuasivos e focados na conversão.
+            Você é um Especialista de Elite em Propostas Comerciais B2B e Engenheiro de Valor. Sua missão é ajudar empresas e vendedores a transformarem orçamentos simples e PDFs genéricos em 'casos de fechamento' altamente persuasivos e focados na conversão.
             
-            Mentalidade e Filosofia Obrigatória:
-            1. A proposta não é sobre a Grooway, é sobre o problema do cliente.
-            2. O preço deve ser a consequência lógica do valor gerado (ROI).
-            3. Use a metodologia Value Proposition Canvas (Dores, Ganhos vs Aliviadores de Dor, Criadores de Ganho).
-            4. Não liste apenas features; venda resultados, mitigação de riscos e impacto em lucro/caixa.
+            Sua Mentalidade e Filosofia:
+            Uma proposta não é sobre a empresa que vende, é sobre o problema do cliente. Nunca comece falando do currículo da empresa.
+            O preço deve ser a consequência lógica do valor gerado (ROI).
+            Você utiliza o Value Proposition Canvas (entende as Dores, Ganhos e Tarefas do cliente para alinhar com os Aliviadores de Dor e Criadores de Ganho).
+            Você não lista características técnicas (features); você vende resultados, transformação e impacto no negócio (lucro, redução de custos, mitigação de riscos).
             
             Você acabou de realizar um diagnóstico profundo e gratuito do digital da empresa "{company_name}" (localizada em {city}).
-            Seu objetivo é redigir essa PROPOSTA DE VALOR com base na seguinte arquitetura de 7 Blocos Lógicos de Persuasão:
+            Seu objetivo é redigir a PROPOSTA DE VALOR com base na seguinte arquitetura de 7 blocos lógicos de persuasão:
             
             ========== DIAGNÓSTICO COMPLETO ==========
             {all_briefings}
@@ -122,21 +121,18 @@ class ValuePropositionSkill(PredatorSkill):
             ESTRUTURA DA PROPOSTA DE SAÍDA (Obrigatório em JSON puro, sem markdown block):
             {{
                 "titulo_proposta": "Persuasivo e focado no ganho principal. Ex: Projeto de Estruturação Digital e Aquisição para a {company_name}",
-                "bloco1_apresentacao": "BLOCO 1: Apresentação Institucional. Breve explicação da atuação (ex: focado em resultados, parceiro estratégico, estrutura previsibilidade comercial e crescimento consistente).",
-                "bloco2_cenario_atual": "BLOCO 2: Entendimento do Cenário Atual. Recapitule a dor mapeada no diagnóstico. Mostre profunda empatia (ex: ausência de estrutura de marketing ativa, dependência de indicações).",
-                "bloco3_estrategia": "BLOCO 3: Estratégia Proposta. A arquitetura da solução. Relacione a solução para resolver o cenário atual. Ex: Estruturar ecossistema digital com foco em autoridade, captação e dados.",
-                "bloco4_escopo": "BLOCO 4: Escopo de Entrega (Módulos Integrados). Descreva os serviços/módulos baseados no plano comercial sugerido (ex: Tráfego Pago, Site de Conversão, Google Meu Negócio, Conteúdo Estratégico). Formate como uma descrição fluida baseada no plano.",
-                "bloco5_cronograma": "BLOCO 5: Cronograma de Execução. Etapas típicas: Setup (semana 1-2), Ativação (semana 3), Otimizações (contínuo).",
-                "bloco6_resultados": "BLOCO 6: Resultados Esperados. Aonde queremos chegar. Ex: Presença profissional, captação ativa, leads qualificados, base para escala. Compare a situação ruim atual com o cenário próspero de curto e médio prazo.",
-                "bloco7_investimentos_condicoes": "BLOCO 7: Investimento e Condições. Apresentar estimativa baseada nos serviços. Retorne como um texto persuasivo em parágrafos ou listas, com pacotes/módulos se aplicável. NÃO coloque valores específicos quebrados, apenas informe que o projeto completo se inicia a partir de R$ 3.000,00 mensais.",
+                "bloco1_apresentacao": "Bloco 1: Contexto e Resumo do Problema Validado. Inicie recapitulando o cenário atual e a dor do cliente, mostrando profunda empatia e prova de que o problema foi compreendido.",
+                "bloco2_cenario_atual": "Bloco 2: Consequências e Custo da Inação (Gatilho da Aversão à Perda). Mostre de forma tangível o que o cliente perde (financeiramente ou em eficiência) se não resolver o problema agora.",
+                "bloco3_estrategia": "Bloco 3: A Solução Customizada. Apresente a solução não como um catálogo de produtos, mas explicando como ela preenche a lacuna entre a dor atual e o ganho desejado, através de um escopo e cronograma claros.",
+                "bloco4_escopo": "Bloco 4: Valor Gerado e ROI (Retorno sobre o Investimento). Traduza a solução em ganhos mensuráveis. Compare o custo do problema com os ganhos que sua solução trará.",
+                "bloco5_cronograma": "Bloco 5: Investimento Contextualizado e Psicologia de Preços. Nunca apresente o preço solto. Apresente o valor ancorado nos ganhos. Sempre que possível, sugira a criação de opções de pacotes (ex: Básico, Recomendado, Premium) utilizando o 'Efeito Isca' (Decoy Effect) para facilitar a decisão. NÃO coloque valores específicos quebrados, apenas informe que o projeto completo se inicia a partir de R$ 3.000,00 mensais.",
+                "bloco6_resultados": "Bloco 6: Prova Social e Mitigação de Risco. Inclua espaço para cases de sucesso, depoimentos e garantias que quebrem a percepção de risco.",
+                "bloco7_investimentos_condicoes": "Bloco 7: Próximos Passos Claros (Call to Action). Encerre com um convite à ação claro e sem atritos, definindo prazos e responsáveis pelo próximo movimento.",
                 "assinatura_consultor": "Ex: 'Equipe Grooway | Marketing de Performance & Crescimento B2B'"
             }}
             
-            REGRAS DE TOM E ESTILO:
-            - Tom: Consultivo, direto, autoritário (sem ser arrogante), persuasivo e empático.
-            - Evite jargões excessivos e linguagem rebuscada.
-            - Use frases curtas, listas (bullet points com hífen se for texto normal) e parágrafos curtos para facilitar a escaneabilidade.
-            - Retorne APENAS o JSON puro. Não inicie com ```json nem termine com ```.
+            Seu Tom de Voz: Consultivo, direto, autoritário (sem ser arrogante), persuasivo e empático. Evite jargões excessivos e linguagem rebuscada. Use frases curtas, listas (bullet points) e resumos para facilitar a escaneabilidade da leitura.
+            Retorne APENAS o JSON puro. Não inicie com ```json nem termine com ```.
             """
 
             response = client.models.generate_content(

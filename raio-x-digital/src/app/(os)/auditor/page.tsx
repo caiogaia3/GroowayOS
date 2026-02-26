@@ -177,7 +177,22 @@ export default function DigitalPredatorScanner() {
       if (savedResult) {
         const url = `${window.location.origin}/diagnostico/${savedResult.slug}`;
         setShareLink(url);
-        navigator.clipboard.writeText(url);
+
+        try {
+          if (navigator.clipboard && navigator.clipboard.writeText) {
+            await navigator.clipboard.writeText(url);
+          } else {
+            // Fallback: Tenta criar um elemento de input temporário
+            const textArea = document.createElement("textarea");
+            textArea.value = url;
+            document.body.appendChild(textArea);
+            textArea.select();
+            document.execCommand("copy");
+            document.body.removeChild(textArea);
+          }
+        } catch (clipboardError) {
+          console.error("Failed to copy to clipboard:", clipboardError);
+        }
       }
     } catch (e) {
       console.error(e);
@@ -436,9 +451,14 @@ export default function DigitalPredatorScanner() {
                       </button>
 
                       {shareLink ? (
-                        <span className="text-xs text-spring-green-400 bg-spring-green-400/10 px-3 py-2 rounded-lg border border-spring-green-400/20 font-mono">
-                          Link Copiado!
-                        </span>
+                        <div className="flex flex-col items-end gap-1">
+                          <span className="text-xs text-spring-green-400 bg-spring-green-400/10 px-3 py-2 rounded-lg border border-spring-green-400/20 font-mono flex items-center gap-1">
+                            <Target className="w-3 h-3 animate-pulse" /> Link Gerado!
+                          </span>
+                          <a href={shareLink} target="_blank" rel="noopener noreferrer" className="text-[10px] text-slate-400 hover:text-white underline truncate max-w-[200px] sm:max-w-xs">
+                            {shareLink.replace(/^https?:\/\//, '')}
+                          </a>
+                        </div>
                       ) : (
                         <button onClick={handleShareReport} disabled={isSaving} className="px-5 py-2.5 text-sm bg-brand-purple/20 text-brand-purple hover:bg-brand-purple hover:text-white border border-brand-purple/40 rounded-full transition-colors font-semibold flex items-center gap-2">
                           {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Target className="w-4 h-4" />}
