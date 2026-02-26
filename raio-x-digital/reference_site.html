@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>AI Shot PRO</title>
+  <link rel="icon" type="image/png" href="./favicon.png" />
+  <meta name="description"
+    content="Sua foto de perfil representa quem você é hoje? Atualize sua imagem profissional sem estúdio." />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+          },
+          colors: {
+            brand: {
+              purple: '#8b5cf6', // violet-500
+              dark: '#020617',    // slate-950
+            }
+          },
+          backgroundImage: {
+            'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',
+            'hero-glow': 'conic-gradient(from 90deg at 50% 50%, #0f172a 0%, #1e1b4b 50%, #0f172a 100%)',
+          },
+          keyframes: {
+            shimmer: {
+              '0%': { transform: 'translateX(-100%)' },
+              '100%': { transform: 'translateX(100%)' },
+            }
+          },
+          animation: {
+            shimmer: 'shimmer 2s infinite',
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    body {
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      background-color: #020617;
+      /* slate-950 */
+      color: #f8fafc;
+      /* slate-50 */
+    }
+
+    /* GLOBAL GLASSMORPHISM STYLES (LEGACY) */
+    .glass-panel {
+      background: linear-gradient(135deg, rgba(255, 255, 255, 0.03) 0%, rgba(255, 255, 255, 0.01) 100%);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+      transition: all 0.4s ease;
+    }
+
+    .glass-panel:hover {
+      border-color: rgba(139, 92, 246, 0.4);
+      /* violet-500 equivalent */
+      box-shadow: 0 0 25px rgba(139, 92, 246, 0.15);
+      background: linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.02) 100%);
+    }
+
+    /* Secondary Glass Button (Like Hero Testimonials) */
+    .glass-btn {
+      background: rgba(15, 23, 42, 0.6);
+      /* slate-900 with opacity */
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      color: #cbd5e1;
+      /* slate-300 */
+      transition: all 0.3s ease;
+    }
+
+    .glass-btn:hover {
+      background: rgba(30, 41, 59, 0.8);
+      border-color: rgba(255, 255, 255, 0.3);
+      color: #ffffff;
+      box-shadow: 0 0 15px rgba(255, 255, 255, 0.05);
+    }
+
+    /* Purple Shine Button (Global Utility) */
+    .btn-shine {
+      position: relative;
+      background: linear-gradient(to right, #7c3aed, #4f46e5);
+      /* violet-600 to indigo-600 */
+      color: white;
+      font-weight: bold;
+      overflow: hidden;
+      border-radius: 9999px;
+      transition: all 0.3s ease;
+      box-shadow: 0 0 0 4px rgba(139, 92, 246, 0.1);
+    }
+
+    .btn-shine:hover {
+      box-shadow: 0 0 30px rgba(139, 92, 246, 0.5);
+      transform: scale(1.05);
+    }
+
+    .btn-shine:active {
+      transform: scale(0.95);
+    }
+
+    .btn-shine::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(to right, transparent, rgba(255, 255, 255, 0.3), transparent);
+      transform: skewX(-20deg) translateX(-150%);
+      transition: 0.5s;
+    }
+
+    .btn-shine:hover::after {
+      transform: skewX(-20deg) translateX(150%);
+      transition: 1s;
+    }
+
+    /* ========================================= */
+    /* NEW LIQUID GLASS AESTHETIC               */
+    /* ========================================= */
+    .liquid-glass {
+      /* Base transparency */
+      background: rgba(255, 255, 255, 0.05);
+      /* Blur and Saturation */
+      backdrop-filter: blur(16px) saturate(180%);
+      -webkit-backdrop-filter: blur(16px) saturate(180%);
+      /* Rounded corners */
+      border-radius: 9999px;
+      /* Pill shape by default */
+      /* Borders and Highlights */
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.3),
+        inset 0 -1px 0 rgba(0, 0, 0, 0.1),
+        0 8px 32px rgba(0, 0, 0, 0.3);
+      /* Text styling */
+      color: white;
+      font-weight: 600;
+      transition: all 0.3s ease;
+      /* Optional: SVG Filter reference if needed, usually cleaner to stick to CSS for perf */
+      /* filter: url(#lensFilter); */
+    }
+
+    .liquid-glass:hover {
+      background: rgba(255, 255, 255, 0.1);
+      border-color: rgba(255, 255, 255, 0.4);
+      box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.5),
+        inset 0 -1px 0 rgba(0, 0, 0, 0.1),
+        0 12px 40px rgba(139, 92, 246, 0.2);
+      /* Purple glow */
+      transform: translateY(-2px);
+    }
+
+    .liquid-glass:active {
+      transform: translateY(0);
+      box-shadow:
+        inset 0 2px 4px rgba(0, 0, 0, 0.2),
+        0 4px 10px rgba(0, 0, 0, 0.2);
+    }
+
+    /* FLOATING WHATSAPP BUTTON */
+    .floating_btn {
+      position: fixed;
+      bottom: 30px;
+      right: 30px;
+      width: 100px;
+      height: 100px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+    }
+
+    @keyframes pulsing {
+      to {
+        box-shadow: 0 0 0 30px rgba(66, 219, 135, 0);
+      }
+    }
+
+    .contact_icon {
+      background-color: #42db87;
+      color: #fff;
+      width: 60px;
+      height: 60px;
+      font-size: 30px;
+      border-radius: 50px;
+      text-align: center;
+      box-shadow: 2px 2px 3px #999;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transform: translatey(0px);
+      box-shadow: 0 0 0 0 #42db87;
+      -webkit-animation: pulsing 1.25s infinite cubic-bezier(0.66, 0, 0, 1);
+      -moz-animation: pulsing 1.25s infinite cubic-bezier(0.66, 0, 0, 1);
+      -ms-animation: pulsing 1.25s infinite cubic-bezier(0.66, 0, 0, 1);
+      animation: pulsing 1.25s infinite cubic-bezier(0.66, 0, 0, 1);
+      font-weight: normal;
+      font-family: sans-serif;
+      text-decoration: none !important;
+      transition: all 300ms ease-in-out;
+    }
+
+    .contact_icon:hover {
+      transform: scale(1.1);
+      background-color: #36c779;
+    }
+
+    .my-float {
+      margin-top: 0;
+    }
+
+    .text_icon {
+      margin-top: 8px;
+      color: #fff;
+      /* Changed from #707070 to white to be visible on dark bg */
+      font-size: 13px;
+      text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
+    }
+  </style>
+
+
+  <script type="importmap">
+{
+  "imports": {
+    "react": "https://esm.sh/react@^19.2.4",
+    "react-dom/": "https://esm.sh/react-dom@^19.2.4/",
+    "react/": "https://esm.sh/react@^19.2.4/",
+    "lucide-react": "https://esm.sh/lucide-react@^0.563.0",
+    "@stripe/stripe-js": "https://esm.sh/@stripe/stripe-js@3.0.7",
+    "swiper": "https://esm.sh/swiper@11",
+    "swiper/react": "https://esm.sh/swiper@11/react",
+    "swiper/modules": "https://esm.sh/swiper@11/modules",
+    "swiper/": "https://esm.sh/swiper@^12.1.0/"
+  }
+}
+</script>
+  <script type="module" crossorigin src="./assets/index-65HtKc_h.js"></script>
+</head>
+
+<body>
+  <!-- Hidden SVG for Liquid Distortion Filters (Optional usage) -->
+  <svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
+    <filter id="lensFilter" x="0%" y="0%" width="100%" height="100%" filterUnits="objectBoundingBox">
+      <feComponentTransfer in="SourceAlpha" result="alpha">
+        <feFuncA type="identity" />
+      </feComponentTransfer>
+      <feGaussianBlur in="alpha" stdDeviation="50" result="blur" />
+      <feDisplacementMap in="SourceGraphic" in2="blur" scale="50" xChannelSelector="A" yChannelSelector="A" />
+    </filter>
+  </svg>
+  <div id="root"></div>
+</body>
+
+</html>
