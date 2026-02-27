@@ -510,7 +510,7 @@ export default function DigitalPredatorScanner() {
                         <div className="flex items-center justify-between w-full mt-auto pt-4 border-t border-slate-700/50 relative z-10">
                           <p className="text-xs text-slate-500 font-medium flex items-center gap-1.5">
                             <Clock className="w-3 h-3" />
-                            {item.saved_at ? new Date(item.saved_at).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short', year: 'numeric' }) : 'Recente'}
+                            {item.saved_at ? new Date(item.saved_at).toLocaleString('pt-BR', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }).replace(',', ' às') : 'Recente'}
                           </p>
                           <div className="text-[10px] uppercase tracking-wider font-bold text-brand-purple/70 group-hover:text-brand-purple flex items-center gap-1 transition-colors">
                             Ver Análise
