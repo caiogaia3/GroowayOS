@@ -29,7 +29,7 @@ class MarketResearchSkill(PredatorSkill):
         briefing = self._empty_boss_briefing()
         
         report = {
-            "name": "Market Intelligence Agent",
+            "name": "Market Research & Intelligence",
             "score": 100,
             "findings": {
                 "niche": "Desconhecido",

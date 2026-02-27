@@ -149,7 +149,7 @@ class SeniorAnalystSkill(PredatorSkill):
             if "genéric" in verdict.lower() or "fraco" in verdict.lower(): sc -= 15
 
             return {
-                "name": "The Boss (Tribunal do Comandante)",
+                "name": "Senior CMO Agent (Business & Sales)",
                 "score": max(0, min(100, sc)),
                 "findings": {
                     "martelo_do_veredito": verdict,
