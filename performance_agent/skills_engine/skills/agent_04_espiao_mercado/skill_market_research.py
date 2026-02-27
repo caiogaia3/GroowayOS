@@ -115,38 +115,36 @@ class MarketResearchSkill(PredatorSkill):
             prompt = f"""
             PERSONA:
             Você é o 'Espião de Mercado' (Agente 04), um perito em espionagem industrial focado em mapear o 'Oceano Azul' do cliente.
-            Seu Arsenal inclui o 'Simulador de Cliente (Mystery Shopper)' e o 'Rastreador de Pegada Digital Competitiva'.
-            Sua missão é dar o 'Veredito de Comoditização' e identificar a 'Diferenciação Irresistível'.
+            Seu Arsenal inclui a 'Threat Matrix' (Matriz de Ameaças), o 'Canvas do Oceano Azul' e as 'Top 5 Objeções de Vendas'.
+            Sua missão é entregar o diagnóstico estratégico competitivo definitivo.
 
             EQUIPAMENTO DE RECONHECIMENTO (DADOS):
             - Alvo: {company_name} em {city}
             - Site: {self.target_url}
-            - Radar de Concorrência (Top Players Reais):
+            - Radar de Concorrência (Top Players Reais via Apify Google Search):
             {apify_context}
-            - Lexicon do Alvo (Semântica):
+            - Contexto Semântico do Alvo:
             "{text_context}"
             
-            SUA MISSÃO FORENSE:
-            1. VEREDITO DE COMODITIZAÇÃO: O cliente é apenas 'mais um' ou tem uma marca que gera desejo?
-            2. MAPEAMENTO DE OCEANO AZUL: Onde a concorrência é cega e o alvo pode dominar sem brigar por preço?
-            3. INTELIGÊNCIA DE PREÇO PSICOLÓGICO: O marketing atual sustenta um ticket alto ou desvaloriza o serviço?
-            4. RASTREADOR DE PEGADA COMPETITIVA: Quem são os rivais que estão 'asfixiando' o crescimento do alvo?
+            SUA MISSÃO FORENSE EM JSON:
+            1. THREAT MATRIX (MATRIZ DE AMEAÇAS): Analise os concorrentes locais detectados. Quais são seus principais argumentos de venda e onde eles são vulneráveis? Preencha a matriz nomeando-os.
+            2. TOP 5 OBJEÇÕES DE VENDAS: O que o cliente final (lead local) mais usa como desculpa para NÃO comprar nesse nicho específico na região? Seja ultra-realista.
+            3. CANVAS DO OCEANO AZUL: Onde está a "fuga" estratégica? Onde o mercado atual está saturado (Oceano Vermelho) e qual o posicionamento inexplorado de lucros (Oceano Azul) para focar?
+            4. VEREDITO DE COMODITIZAÇÃO: O cliente atual é apenas "mais um" brigando por preço ou possui diferenciação clara?
 
             JSON OUTPUT FORMAT:
             {{
                 "niche": "Nome técnico do nicho",
                 "target_icp": "Perfil do cliente ideal (Quem compra?)",
-                "commoditization_verdict": "Veredito sobre ser ou não uma commodity",
-                "blue_ocean_map": "Onde está o caminho de menor resistência?",
-                "price_intelligence": "Análise de valor vs preço percebido",
-                "competitor_vulnerabilities": ["Vulnerabilidade 1", "Vulnerabilidade 2"],
-                "dores_icp": ["Dor do cliente final 1", "Dor 2"],
-                "competitor_benchmarks": ["Benchmark 1 (Nome + Falha de Armadura)"],
-                "deep_research_markdown": "Mega Dossiê formatado em Markdown (7 seções)",
+                "commoditization_verdict": "Veredito sobre ser ou não uma commodity (Brigando por preço vs Diferenciado)",
+                "blue_ocean_canvas": "Red Ocean: [onde todos brigam] -> Blue Ocean: [o posicionamento inexplorado]",
+                "threat_matrix": ["Rival A: [Argumento Forte] | [Vulnerabilidade]", "Rival B: [Argumento Forte] | [Vulnerabilidade]"],
+                "top_5_sales_objections": ["Objeção 1: Motivo real", "Objeção 2", "Objeção 3", "Objeção 4", "Objeção 5"],
+                "price_intelligence": "Análise de valor vs preço percebido (A comunicação atual sustenta cobrar caro?)",
+                "dores_icp": ["A maior dor n° 1 do cliente final", "Dor n° 2"],
                 "evidences": ["Trecho literal que prova a falta de diferenciação"],
-                "internal_boss_ammo": "Munição tática de mercado para o Boss fechar a venda.",
-                "alchemist_briefing": "Briefing para o Agente 07 criar uma oferta impossível de ignorar.",
-                "market_verdict": "Sentença implacável de 2-3 linhas sobre o cenário competitivo."
+                "internal_boss_ammo": "Munição de mercado letal para o Boss fechar a venda de assessoria.",
+                "market_verdict": "Sentença implacável de 2-3 linhas sobre a miopia competitiva atual."
             }}
             """
 
@@ -154,6 +152,10 @@ class MarketResearchSkill(PredatorSkill):
             json_data = self._call_llm_json(prompt)
 
             if json_data and isinstance(json_data, dict):
+                    # Garantir campos padrão mesmo que o LLM omita
+                    json_data["competitor_benchmarks"] = json_data.get("threat_matrix", [])
+                    json_data["blue_ocean_map"] = json_data.get("blue_ocean_canvas", "")
+                    json_data["objecoes_icp"] = json_data.get("top_5_sales_objections", [])
                     report["findings"] = json_data
                     
                     # Injeção no Briefing do Arsenal
@@ -166,12 +168,16 @@ class MarketResearchSkill(PredatorSkill):
                         report["score"] -= 25
                         briefing["pontos_negativos"].append(f"Veredito de Comoditização: {commoditization}")
                     
-                    blue_ocean = json_data.get("blue_ocean_map", "")
+                    blue_ocean = json_data.get("blue_ocean_canvas", "")
                     if blue_ocean:
                         briefing["brechas_diferenciacao"].append(f"Oceano Azul Identificado: {blue_ocean}")
+                        
+                    threats = json_data.get("threat_matrix", [])
+                    if threats:
+                        for idx, t in enumerate(threats[:3]):
+                            briefing["pontos_negativos"].append(f"Ameaça Local {idx+1}: {t}")
                     
                     report["internal_briefing_for_boss"] = json_data.get("internal_boss_ammo", "")
-                    report["internal_briefing_for_alchemist"] = json_data.get("alchemist_briefing", "")
 
             else:
                 report["critical_pains"].append("O Radar de Inteligência não retornou sinais (Vácuo de IA).")

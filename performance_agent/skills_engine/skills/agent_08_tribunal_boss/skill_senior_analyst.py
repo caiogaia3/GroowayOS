@@ -83,29 +83,38 @@ class SeniorAnalystSkill(PredatorSkill):
 
             client = genai.Client(api_key=self.api_key)
             prompt = f"""
-            PERSONA: 'O COMANDANTE' (Agente 08 - The Boss) da GroowayOS. 
-            ARSENAL: 'Martelo do Veredito', 'Scanner de Incoerência', 'Mapeamento de Lucro Invisível'.
-            DADOS: A empresa '{company_name}' ({city}) tem média de eficácia de {avg_score}%.
+            PERSONA: O 'CHIEF STRATEGY OFFICER' (Agente 08 - The Boss) da Grooway. 
+            ARSENAL: 'Executive Summary C-Level', 'Calculadora de Damage Cost', 'Plano de Resgate em 3 Fases'.
+            DADOS: A empresa '{company_name}' ({city}) tem média de saúde digital de {avg_score}%.
 
-            INTELIGÊNCIA CONSOLIDADA:
+            INTELIGÊNCIA CONSOLIDADA (Relatórios dos Agentes 01, 03, 04):
             {intel}
+            CATÁLOGO DE SERVIÇOS DA GROOWAY:
+            {cat_data}
 
-            SUA MISSÃO TÁTICA NO TRIBUNAL:
-            1. MARTELO DO VEREDITO: Julgue se o ativo digital é um facilitador ou um dreno de capital.
-            2. INCOERÊNCIAS: Identifique mentiras ou gaps entre o que o site diz e a realidade do GMB/Ads.
-            3. LUCRO INVISÍVEL: Calcule o 'Imposto da Comoditização' (quanto perdem por serem genéricos).
-            4. PLANO DE DOMINAÇÃO: Selecione 3 planos do catálogo {cat_data} para resgatar o ROI.
+            SUA MISSÃO ESTRATÉGICA (O PITCH FINAL):
+            1. RESUMO EXECUTIVO C-LEVEL: Uma síntese devastadora, focada em dor comercial, perda financeira e posicionamento (nada de jargões técnicos fofos, fale de dinheiro deixado na mesa).
+            2. INCOERÊNCIAS E GAPS: O que a marca promete vs a dura realidade mapeada pelos agentes (Vácuo de Autoridade, Threat Matrix, Reviews).
+            3. PLANO DE BATALHA EM 3 FASES:
+               - Fase 1: Estancar a Sangria (O que fazer semana 1 para parar de perder clientes ativos).
+               - Fase 2: Tração de Mercado (O que fazer no mês 1 para captar nova demanda).
+               - Fase 3: Dominação e Oceano Azul (O que fazer no trimestre para engolir os concorrentes).
+            4. RECOMENDAÇÃO DE SERVIÇOS (ARSENAL GROOWAY): Escolha os 3 serviços exatos do catálogo que resolvem as dores e encaixe-os no pitch.
 
             JSON OUTPUT FORMAT:
             {{
-                "martelo_do_veredito": "Veredito sênior e autoritário",
-                "sentenca_clinica": "Tradução para dinheiro",
-                "incoerencias_detectadas": ["Incoerência 1", "2"],
-                "mapeamento_lucro_invisivel": "Estimativa de perda financeira mensal em R$",
+                "executive_summary_clevel": "Um parágrafo C-Level letal sobre o estado comercial da empresa",
+                "incoerencias_comerciais": ["Incoerência 1 (ex: Diz ser líder, mas tem GMB nota 3.8)", "Incoerência 2"],
+                "damage_cost_total": "Soma estimada da % ou R$ perdido devido a ineficácia social e local",
+                "battle_plan_phases": {{
+                    "fase_1_estancar_sangria": "Ações emergenciais e recomendação Grooway",
+                    "fase_2_tracao": "Ações de crescimento e recomendação Grooway",
+                    "fase_3_dominacao": "Posicionamento Oceano Azul e recomendação Grooway"
+                }},
                 "servicos_recomendados": [
-                    {{ "servico": "Nome", "por_que": "Motivo tático" }}
+                    {{ "servico": "Nome exato", "pitch_de_venda_direta": "Argumento conectando a dor descoberta ao serviço" }}
                 ],
-                "evidencias_finais": ["Fato 1", "2"]
+                "martelo_do_veredito": "Uma farpa final (punchline) fechando o diagnóstico encorajando a ação"
             }}
             """
 
@@ -113,20 +122,26 @@ class SeniorAnalystSkill(PredatorSkill):
 
             if res:
                 verdict = res.get("martelo_do_veredito", "")
-                mapeamento = res.get("mapeamento_lucro_invisivel", "")
-                incoerencias = res.get("incoerencias_detectadas", [])
-                evid = res.get("evidencias_finais", [])
+                mapeamento = res.get("damage_cost_total", "")
+                incoerencias = res.get("incoerencias_comerciais", [])
+                evid = [] # Legacy array support for backwards compatibility
+                executive_summary = res.get("executive_summary_clevel", "")
+                battle_plan = res.get("battle_plan_phases", {})
                 
                 for s in res.get("servicos_recomendados", []):
                     plano["servicos_recomendados"].append({
                         "servico_grooway": s.get("servico"),
-                        "meta_de_resgate": s.get("por_que")
+                        "meta_de_resgate": s.get("pitch_de_venda_direta")
                     })
-                    b_rec.append(f"RECOMENDAÇÃO: {s.get('servico')} - {s.get('por_que')}")
+                    b_rec.append(f"RECOMENDAÇÃO TÁTICA ('{s.get('servico')}'): {s.get('pitch_de_venda_direta')}")
 
-                b_neg.append(f"SENTENÇA: {res.get('sentenca_clinica')}")
-                b_neg.append(f"LUCRO INVISÍVEL: {mapeamento}")
+                b_neg.append(f"RESUMO EXECUTIVO C-LEVEL: {executive_summary}")
+                b_neg.append(f"DAMAGE COST ESTIMADO: {mapeamento}")
                 b_pos.append(f"VEREDITO: {verdict}")
+                
+                if isinstance(battle_plan, dict):
+                    for phase, desc in battle_plan.items():
+                        b_rec.append(f"PLANO DE BATALHA ({str(phase).replace('_', ' ').upper()}): {desc}")
 
             # Score logic: Start at avg and penalize for incoherencies or commoditization
             sc = avg_score
@@ -140,6 +155,8 @@ class SeniorAnalystSkill(PredatorSkill):
                     "martelo_do_veredito": verdict,
                     "incoerencias_detectadas": incoerencias,
                     "mapeamento_lucro_invisivel": mapeamento,
+                    "executive_summary_clevel": executive_summary if "executive_summary" in locals() else "",
+                    "battle_plan_phases": battle_plan if "battle_plan" in locals() else {},
                     "plano_de_dominacao": plano,
                     "evidencias_de_guerra": evid,
                     "cmo_verdict": verdict # Legacy compat

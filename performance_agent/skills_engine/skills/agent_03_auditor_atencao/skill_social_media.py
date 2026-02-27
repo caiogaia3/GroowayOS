@@ -194,10 +194,24 @@ class SocialMediaResearchSkill(PredatorSkill):
             # =============================================
             latest_posts = profile.get("latestPosts", [])
             captions = []
+            total_likes = 0
+            total_comments = 0
+            post_count_sampled = 0
+            
             for post in latest_posts[:6]:
                 cap = post.get("caption", "")
                 if cap:
                     captions.append(cap)
+                total_likes += post.get("likesCount", 0) or 0
+                total_comments += post.get("commentsCount", 0) or 0
+                post_count_sampled += 1
+            
+            eng_rate = 0
+            if followers > 0 and post_count_sampled > 0:
+                avg_inter = (total_likes + total_comments) / post_count_sampled
+                eng_rate = (avg_inter / followers) * 100
+            
+            eng_rate_str = f"{eng_rate:.2f}%"
             
             if self.api_key and (bio or captions):
                 try:
@@ -205,33 +219,35 @@ class SocialMediaResearchSkill(PredatorSkill):
                     prompt = f"""
                     PERSONA:
                     Você é o 'Auditor de Atenção' (Agente 03), um perito de elite focado em desmascarar perfis que são apenas 'Panfletos Digitais'.
-                    Seu Arsenal inclui o 'Scanner de Retenção Bio-Link' e o 'Veredito de Perda de Autoridade'.
-                    Sua missão é dar a 'Sentença de Estética Amadora' e mapear o 'Furo no Funil'.
+                    Sua missão é dar o veredito sobre a Identidade, Temperatura da Audiência e Estética Amadora.
 
                     EQUIPAMENTO DE RECONHECIMENTO (DADOS):
                     - Biografia: "{bio}"
                     - Links na bio: {bio_links}
                     - Links ocultos/Linktree: {report["findings"].get("compiled_links", [])}
+                    - Seguidores: {followers}
+                    - Taxa de Engajamento Real (Últ. 6 posts): {eng_rate_str}
                     - Legendas REAIS (Últimos {len(captions)} posts):
                     "{' | '.join(captions)}"
                     
                     SUA MISSÃO FORENSE:
-                    1. VEREDITO DE PERDA DE AUTORIDADE: A bio comunica uma Proposta Única de Valor (PUV) ou é um 'Vácuo de Autoridade'?
-                    2. SCANNER DE RETENÇÃO BIO-LINK: O link na bio é uma ponte para o lucro ou um 'Furo no Funil'?
-                    3. SENTENÇA DE ESTÉTICA AMADORA: O grid gera desejo e autoridade ou afasta o cliente de alto ticket?
-                    4. DISSONÂNCIA SOCIAL: Existe desalinhamento entre a promessa da marca e a entrega visual?
+                    1. IDENTIDADE E ESTÉTICA VISUAL: Pelo padrão das legendas (tom de voz, emojis, hashtags), a marca transmite qual identidade? É premium ou amadora?
+                    2. TEMPERATURA DA AUDIÊNCIA: Baseado na taxa matemática de engajamento ({eng_rate_str}) e estilo, classifique a base como Fria, Morna ou Engajada de forma consultiva.
+                    3. SCANNER DE RETENÇÃO BIO-LINK: O link na bio é uma ponte para o lucro ou um 'Furo no Funil'? Retorne o veredito técnico (Bio Audit).
+                    4. PLANO TÁTICO DE 5 POSTS: Um calendário editorial de tiro curto (5 posts) focado estritamente em converter seguidores ociosos em leads. Nada de dicas amplas.
 
                     JSON OUTPUT FORMAT:
                     {{
                         "grid_conversion_capacity": "Status (ex: Panfleto Digital / Máquina de Autoridade)",
                         "bio_audit": "Veredito técnico sobre a Bio (ex: Miopia de Posicionamento Detectada)",
+                        "visual_identity_verdict": "Veredito técnico sobre a Estética baseada na linguagem e legendas",
+                        "audience_temperature": "Classificação da temperatura da audiência elaborada",
                         "conversion_friction": "Onde o lead está 'escapando' no funil social?",
-                        "authority_verdict": "Veredito final sobre a autoridade percebida.",
-                        "sales_bullet": "Munição de dor: Como o Boss deve usar isso para vender?",
+                        "tactical_5_post_plan": ["Ação Tática Post 1", "Ação Tática Post 2", "Post 3", "Post 4", "Post 5"],
+                        "sales_bullet": "Munição de dor: Como o Boss deve usar as falhas atuais para vender a necessidade de gestão?",
                         "social_verdict": "Veredito implacável de 2-3 linhas para o dossiê final.",
                         "internal_boss_ammo": "O gargalo financeiro real detectado.",
-                        "alchemist_briefing": "Dica tática para o Agente 07 criar anúncios de resgate.",
-                        "strategic_actions": ["Ação imediata 1", "Ação imediata 2"],
+                        "alchemist_briefing": "Dica tática para anúncios.",
                         "evidences": ["Trecho literal que prova o vácuo de autoridade"]
                     }}
                     """
@@ -240,8 +256,11 @@ class SocialMediaResearchSkill(PredatorSkill):
                     if json_data and isinstance(json_data, dict):
                             report["findings"]["is_profile_selling"] = "Máquina" in json_data.get("grid_conversion_capacity", "")
                             report["findings"]["sales_alignment"] = json_data.get("sales_bullet", "")
-                            report["findings"]["authority_triggers"] = json_data.get("authority_verdict", "")
-                            report["findings"]["content_ideas"] = json_data.get("strategic_actions", [])
+                            report["findings"]["authority_triggers"] = json_data.get("visual_identity_verdict", "")
+                            report["findings"]["content_ideas"] = json_data.get("tactical_5_post_plan", [])
+                            report["findings"]["engagement_estimate"] = f"Atenção: {eng_rate_str} | Audiência: {json_data.get('audience_temperature', '')}"
+                            
+                            briefing["pontos_negativos"].append(f"Taxa de Engajamento: {eng_rate_str}")
                             
                             evidences = json_data.get("evidences", [])
                             if isinstance(evidences, list):
@@ -268,7 +287,7 @@ class SocialMediaResearchSkill(PredatorSkill):
                                 score -= 20
                                 briefing["pontos_negativos"].append("Síndrome do Perfil Panfleto (Baixa Conversão)")
                             
-                            briefing["recomendacoes"].extend(json_data.get("strategic_actions", []))
+                            briefing["recomendacoes"].extend(json_data.get("tactical_5_post_plan", []))
                 
                 except Exception as ai_err:
                     print(f"  [Social Agent] Falha na cognição Arsenal: {ai_err}")
@@ -277,12 +296,13 @@ class SocialMediaResearchSkill(PredatorSkill):
             report["score"] = max(0, score)
             
             # Veredito Final de Arsenal
-            if report["score"] >= 80:
-                report["findings"]["engagement_estimate"] = "Ativo de Atenção Estratégico"
-            elif report["score"] >= 50:
-                report["findings"]["engagement_estimate"] = "Miopia de Posicionamento Moderada"
-            else:
-                report["findings"]["engagement_estimate"] = "Vácuo de Autoridade / Panfleto Digital"
+            if not report["findings"].get("engagement_estimate") or report["findings"]["engagement_estimate"] == "N/A":
+                if report["score"] >= 80:
+                    report["findings"]["engagement_estimate"] = f"Taxa Localizada: {eng_rate_str} (Ativo Estratégico)"
+                elif report["score"] >= 50:
+                    report["findings"]["engagement_estimate"] = f"Taxa Localizada: {eng_rate_str} (Miopia)"
+                else:
+                    report["findings"]["engagement_estimate"] = f"Taxa Localizada: {eng_rate_str} (Vácuo de Autoridade)"
 
         except Exception as e:
             report["critical_pains"].append(f"Erro no Drone de Auditoria Social: {str(e)}")
