@@ -65,7 +65,7 @@ class KeywordResearchSkill(PredatorSkill):
                 try:
                     client = genai.Client(api_key=self.api_key)
                     niche_resp = client.models.generate_content(
-                        model='gemini-2.5-flash',
+                        model='gemini-3-flash-preview',
                         contents=f"Leia o texto abaixo e responda APENAS o serviço/produto principal da empresa em no máximo 3 palavras (ex: 'dentista', 'advogado trabalhista', 'hamburgueria artesanal'). Texto: \"{text}\"",
                         config=types.GenerateContentConfig(temperature=0.0)
                     )
@@ -195,94 +195,90 @@ class KeywordResearchSkill(PredatorSkill):
                 related_summary = ", ".join(all_related[:10])
                 
                 prompt = f"""
-                Você é um Estrategista de Google Ads analisando oportunidades reais de busca para a empresa '{company_name}' na cidade de {city}.
-                O nicho/segmento identificado é: {niche_hint}.
-                
-                RESULTADOS ORGÂNICOS REAIS DO GOOGLE:
-                {organic_summary}
-                
-                CONCORRÊNCIA PAGA (Anúncios detectados):
-                {paid_summary}
-                
-                BUSCAS RELACIONADAS SUGERIDAS PELO GOOGLE:
-                {related_summary}
-                
-                SUA MISSÃO OBRIGATÓRIA:
-                Gerar um plano de palavras-chave estratégico contendo EXATAMENTE 5 palavras de Cauda Curta (Short-Tail) e 5 palavras de Cauda Longa (Long-Tail).
-                
-                REGRAS RÍGIDAS PARA AS PALAVRAS-CHAVE:
-                1. As palavras-chave DEVEM ser baseadas no SEGMENTO/NICHO ('{niche_hint}') e NUNCA no nome da empresa ('{company_name}').
-                2. O foco é capturar tráfego de pessoas que não conhecem a empresa, mas procuram pelo serviço. (Ex: se a empresa for 'Padaria do João', a keyword deve ser 'padaria artesanal {city}' e NUNCA 'padaria do joao').
-                3. Estime o Volume de Busca Mensal (em números reais, ex: 1500, 350) e o Nível de Concorrência (Baixa, Média, Alta) baseado no seu conhecimento macroeconômico regional.
-                
-                Me responda ESTRITAMENTE num formato JSON válido:
+                PERSONA:
+                Você é o 'Maestro Ads' (Agente 06), um estrategista de guerra cibernética e arquiteto de aquisição.
+                Seu Arsenal inclui o 'Planejador de Campanhas de Guerra' e o 'Arquiteto de Funil de Conversão'.
+                Sua missão é projetar o 'Plano de Dominação de Busca' e dar o 'Veredito de Poder de Compra'.
+
+                DADOS DE RECONHECIMENTO (LIVE SEARCH):
+                - Nicho Detectado: {niche_hint}
+                - Orgânicos: {organic_summary[:1000]}
+                - Anúncios Pagos: {paid_summary}
+                - Buscas Sugeridas: {related_summary}
+                - Site do Alvo: {self.target_url}
+
+                SUA MISSÃO TÁTICA:
+                1. PLANO DE DOMINAÇÃO DE BUSCA: Liste 5-7 palavras-chave estratégicas para "sequestrar" o mercado.
+                2. VEREDITO DE PODER DE COMPRA: Onde está o dinheiro imediato? (Ex: 'Melhor [Serviço]' vs '[Serviço] Preço').
+                3. MAPEAMENTO DE INTENÇÃO: Qual a dor que o anúncio deve atacar para cada busca?
+                4. ESTRATEGIA DE RETARGETING: Como pegaremos o lead que o Agente 05 detectou que está 'vazando'?
+
+                JSON OUTPUT FORMAT:
                 {{
-                    "search_insights": "Resumo de 3 linhas sobre o cenário de tráfego de busca genérica/nicho na cidade. Diga se a concorrência paga é alta.",
-                    "keyword_opportunities": [
-                        {{"keyword": "servico generico curto {city}", "type": "short-tail", "volume": 2500, "competition": "Alta"}},
-                        {{"keyword": "servico especifico longo e barato {city}", "type": "long-tail", "volume": 450, "competition": "Baixa"}}
-                    ]
+                    "search_domination_plan": ["Palavra 1", "Palavra 2"],
+                    "purchasing_power_verdict": "Veredito sobre onde focar para lucro rápido",
+                    "funnel_architecture_brief": "Como deve ser a jornada do lead",
+                    "offensive_copy_triggers": ["Gatilho 1", "Gatilho 2"],
+                    "retargeting_strategy": "Plano para fechar o furo no balde detectado pelo Agente 05",
+                    "internal_boss_ammo": "Munição de ganidade sobre lucro fácil para o Boss.",
+                    "alchemist_briefing": "Dica para o Agente 07 criar uma 'Oferta Irresistível' para estas palavras.",
+                    "strategic_recommendations": ["Recomendação 1", "Recomendação 2"],
+                    "maestro_verdict": "Veredito final de 2-3 linhas para o dossiê."
                 }}
                 """
-                
+
                 response = client.models.generate_content(
-                    model='gemini-2.5-flash',
+                    model='gemini-2.0-flash',
                     contents=prompt,
-                    config=types.GenerateContentConfig(response_mime_type="application/json", temperature=0.1)
+                    config=types.GenerateContentConfig(
+                        temperature=0.1,
+                        response_mime_type="application/json"
+                    )
                 )
-                
+
                 if response.text:
-                    raw_text = response.text
-                    start_idx = raw_text.find('{')
-                    end_idx = raw_text.rfind('}')
-                    if start_idx != -1 and end_idx != -1 and end_idx > start_idx:
-                        raw_text = raw_text[start_idx:end_idx+1]
+                    json_data = json.loads(response.text)
+                    if isinstance(json_data, dict):
+                        report["findings"].update(json_data)
                         
-                    ai_data = json.loads(raw_text)
-                    report["findings"]["search_insights"] = ai_data.get("search_insights", "")
-                    report["findings"]["keyword_opportunities"] = ai_data.get("keyword_opportunities", [])
-                    
+                        verdict = json_data.get("maestro_verdict", "")
+                        if verdict:
+                            briefing["recomendacoes"].append(f"PLANO DO MAESTRO ADS: {verdict}")
+                        
+                        plan = json_data.get("search_domination_plan", [])
+                        if plan:
+                            briefing["brechas_diferenciacao"].append(f"Oportunidades de Ouro (Dominação): {', '.join(plan[:3])}")
+                        
+                        briefing["recomendacoes"].extend(json_data.get("strategic_recommendations", []))
+                        
+                        report["internal_briefing_for_boss"] = json_data.get("internal_boss_ammo", "")
+                        report["internal_briefing_for_alchemist"] = json_data.get("alchemist_briefing", "")
+
             except Exception as gemini_err:
-                print(f"  [Keyword Agent] Erro Gemini: {gemini_err}")
-                report["findings"]["search_insights"] = "Análise estratégica indisponível."
-                # Fallback estático caso a IA falhe totalmente
-                report["findings"]["keyword_opportunities"] = [
-                    {"keyword": f"{niche_hint} em {city}", "type": "short-tail", "volume": 1000, "competition": "Alta"},
-                    {"keyword": f"melhor {niche_hint} perto de mim", "type": "long-tail", "volume": 350, "competition": "Média"},
-                    {"keyword": f"{niche_hint} preço {city}", "type": "short-tail", "volume": 500, "competition": "Média"}
-                ]
+                print(f"  [Maestro Ads] Erro Gemini: {gemini_err}")
+                report["critical_pains"].append("O Maestro Ads falhou na cognição estratégica.")
 
         # =============================================
-        # 5. BOSS BRIEFING
+        # 5. BOSS BRIEFING & SCORE
         # =============================================
-        kw_opportunities = report["findings"].get("keyword_opportunities", [])
-        
-        long_tails = [k["keyword"] for k in kw_opportunities if k.get("type") == "long-tail"]
-        short_tails = [k["keyword"] for k in kw_opportunities if k.get("type") == "short-tail"]
-        
-        if long_tails:
-            briefing["brechas_diferenciacao"].append(f"Oportunidades de Ouro (Cauda Longa): {', '.join(long_tails)}. Tráfego mais qualificado e CPC menor.")
-            briefing["recomendacoes"].append(f"Boss, se a empresa dominar termos específicos de cauda longa como '{long_tails[0]}', ela foge do leilão caro das agências grandes e capta o cliente no fundo do funil, pronto pra comprar.")
-            
-        if short_tails:
-            briefing["pontos_negativos"].append(f"Alta Concorrência nas palavras de topo de funil (Curta): {', '.join(short_tails)}.")
-        
-        if related_summary:
-            briefing["brechas_diferenciacao"].append(f"Tráfego Periférico: O Google sugere buscas relacionadas inexploradas ({related_summary[:100]}...).")
-        
-        # Verifica se a empresa aparece nos resultados
+        # Penalidade por baixa presença orgânica
         company_found_organically = any(company_name.lower() in r.get("title", "").lower() or company_name.lower() in r.get("url", "").lower() for r in all_organic)
-        if company_found_organically:
-            briefing["pontos_positivos"].append(f"A empresa '{company_name}' aparece nos resultados orgânicos do Google para keywords do segmento.")
-        else:
-            briefing["pontos_negativos"].append(f"A empresa '{company_name}' NÃO aparece na primeira página orgânica das principais buscas do segmento em {city}.")
-            briefing["recomendacoes"].append(f"Boss, a empresa é invisível no orgânico para quem busca o serviço deles em {city}. Todo o tráfego está indo de graça para a concorrência. Se aliarmos SEO Local + Injeção de Ads, o jogo vira rápido.")
+        if not company_found_organically and all_organic:
+            report["score"] -= 30
+            briefing["pontos_negativos"].append(f"A empresa '{company_name}' NÃO aparece na primeira página orgânica estratégica em {city}.")
+        elif company_found_organically:
+            briefing["pontos_positivos"].append(f"Presença orgânica detectada para keywords do segmento.")
 
-        
-        report["findings"]["evidences"].append(f"Pesquisa real executada no Google para {len(search_queries)} variações de keywords.")
-        report["findings"]["evidences"].append(f"Foram encontrados {sum(p['paid_count'] for p in all_paid)} anúncios pagos e {len(all_related)} sugestões de busca do Google.")
-        
-        report["boss_briefing"] = briefing
         report["score"] = max(0, report["score"])
         
+        # Status de Arsenal
+        if report["score"] >= 80:
+            report["findings"]["strategic_readiness"] = "Pronto para Dominação Total"
+        else:
+            report["findings"]["strategic_readiness"] = "Vulnerável a Invasão de Busca"
+
+        report["findings"]["evidences"].append(f"Varredura live no Google para {len(search_queries)} variações de keywords.")
+        report["findings"]["evidences"].append(f"Detectados {sum(p['paid_count'] for p in all_paid)} anúncios ativos na região.")
+
+        report["boss_briefing"] = briefing
         return report

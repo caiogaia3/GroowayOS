@@ -189,7 +189,7 @@ class SocialMediaResearchSkill(PredatorSkill):
                 briefing["pontos_positivos"].append(f"Boa densidade de conteúdo ({posts} posts no grid).")
 
             # =============================================
-            # ANÁLISE DE IA (Legendas + Bio)
+            # ANÁLISE DE IA (Arsenal de Elite / Forensic IG)
             # =============================================
             latest_posts = profile.get("latestPosts", [])
             captions = []
@@ -202,124 +202,100 @@ class SocialMediaResearchSkill(PredatorSkill):
                 try:
                     ai_client = genai.Client(api_key=self.api_key)
                     prompt = f"""
-                    Você é um Analista Estratégico de Social Media Sênior focado 100% em Conversão e Vendas.
-                    A PERGUNTA DE OURO É: O perfil @{self.target_handle} VENDE?
-                    
-                    A biografia da empresa é: "{bio}"
-                    Links na bio: {bio_links}
-                    Links ocultos extraídos da árvore de links da Bio: {report["findings"]["compiled_links"]}
-                    As últimas legendas postadas foram:
+                    PERSONA:
+                    Você é o 'Auditor de Atenção' (Agente 03), um perito de elite focado em desmascarar perfis que são apenas 'Panfletos Digitais'.
+                    Seu Arsenal inclui o 'Scanner de Retenção Bio-Link' e o 'Veredito de Perda de Autoridade'.
+                    Sua missão é dar a 'Sentença de Estética Amadora' e mapear o 'Furo no Funil'.
+
+                    EQUIPAMENTO DE RECONHECIMENTO (DADOS):
+                    - Biografia: "{bio}"
+                    - Links na bio: {bio_links}
+                    - Links ocultos/Linktree: {report["findings"].get("compiled_links", [])}
+                    - Legendas REAIS (Últimos {len(captions)} posts):
                     "{' | '.join(captions)}"
                     
-                    PROIBIÇÕES: NÃO invente legendas ou dados. Analise APENAS o que foi fornecido.
-                    
-                    1. Analise se as legendas possuem a estrutura AIDA (Atenção, Interesse, Desejo, Ação).
-                    2. Verifique se existem CTAs claras para produtos/serviços/contato.
-                    3. Entregue 5 ideias TÁTICAS de conteúdo (3 estáticos, 2 reels) focados em gerar leads.
-                    
-                    Me responda ESTRITAMENTE num formato JSON válido:
+                    SUA MISSÃO FORENSE:
+                    1. VEREDITO DE PERDA DE AUTORIDADE: A bio comunica uma Proposta Única de Valor (PUV) ou é um 'Vácuo de Autoridade'?
+                    2. SCANNER DE RETENÇÃO BIO-LINK: O link na bio é uma ponte para o lucro ou um 'Furo no Funil'?
+                    3. SENTENÇA DE ESTÉTICA AMADORA: O grid gera desejo e autoridade ou afasta o cliente de alto ticket?
+                    4. DISSONÂNCIA SOCIAL: Existe desalinhamento entre a promessa da marca e a entrega visual?
+
+                    JSON OUTPUT FORMAT:
                     {{
-                        "is_profile_selling": true/false,
-                        "sales_alignment": "Análise detalhada do Copy, uso do modelo AIDA e CTAs. O perfil vende?",
-                        "authority_triggers": "Demonstram domínio real no assunto? Sim/Não e evidência da legenda.",
-                        "content_ideas": ["Ideia 1 de post que quebra objeção", "Ideia 2 focada na dor do mercado", "Ideia 3 de carrossel de autoridade", "Ideia 4 de Reels topo de funil", "Ideia 5 de Reels com oferta direta"],
-                        "evidences": ["Evidência extraída das legendas reais fornecidas", "Observação sobre a bio e links ocultos"]
+                        "grid_conversion_capacity": "Status (ex: Panfleto Digital / Máquina de Autoridade)",
+                        "bio_audit": "Veredito técnico sobre a Bio (ex: Miopia de Posicionamento Detectada)",
+                        "conversion_friction": "Onde o lead está 'escapando' no funil social?",
+                        "authority_verdict": "Veredito final sobre a autoridade percebida.",
+                        "sales_bullet": "Munição de dor: Como o Boss deve usar isso para vender?",
+                        "social_verdict": "Veredito implacável de 2-3 linhas para o dossiê final.",
+                        "internal_boss_ammo": "O gargalo financeiro real detectado.",
+                        "alchemist_briefing": "Dica tática para o Agente 07 criar anúncios de resgate.",
+                        "strategic_actions": ["Ação imediata 1", "Ação imediata 2"],
+                        "evidences": ["Trecho literal que prova o vácuo de autoridade"]
                     }}
                     """
                     response = ai_client.models.generate_content(
-                        model='gemini-2.5-flash',
+                        model='gemini-2.0-flash',
                         contents=prompt,
-                        config=types.GenerateContentConfig(response_mime_type="application/json", temperature=0.1)
+                        config=types.GenerateContentConfig(
+                            temperature=0.1,
+                            response_mime_type="application/json"
+                        )
                     )
                     
-                    is_profile_selling = True 
-
                     if response.text:
-                        raw_text = response.text
-                        start_idx = raw_text.find('{')
-                        end_idx = raw_text.rfind('}')
-                        if start_idx != -1 and end_idx != -1 and end_idx > start_idx:
-                            raw_text = raw_text[start_idx:end_idx+1]
+                        json_data = json.loads(response.text)
+                        if isinstance(json_data, dict):
+                            report["findings"]["is_profile_selling"] = "Máquina" in json_data.get("grid_conversion_capacity", "")
+                            report["findings"]["sales_alignment"] = json_data.get("sales_bullet", "")
+                            report["findings"]["authority_triggers"] = json_data.get("authority_verdict", "")
+                            report["findings"]["content_ideas"] = json_data.get("strategic_actions", [])
                             
-                        ai_data = json.loads(raw_text)
-                        
-                        # Extrai explicitamente o booleano de venda
-                        is_profile_selling = ai_data.get("is_profile_selling", False)
-                        
-                        report["findings"].update({
-                            "is_profile_selling": is_profile_selling,
-                            "sales_alignment": ai_data.get("sales_alignment", ""),
-                            "authority_triggers": ai_data.get("authority_triggers", ""),
-                            "content_ideas": ai_data.get("content_ideas", [])
-                        })
-                        for ev in ai_data.get("evidences", []):
-                            report["findings"]["evidences"].append("Análise de IA: " + ev)
-                        
-                        # Boss briefing baseado na Venda da IA e Dedução de Score Ativa
-                        if not is_profile_selling:
-                            briefing["brechas_diferenciacao"].append("O conteúdo da rede social não tem CTAs ou falha na estrutura de conversão (AIDA). O perfil funciona como panfleto passivo, não como canal focado em vendas.")
-                            report["critical_pains"].append("Tráfego Desperdiçado (Anti-AIDA): Ausência de gatilhos de vendas ou CTAs no conteúdo.")
-                            score -= 35 # Penalização dura
-                        else:
-                            briefing["pontos_positivos"].append("Estratégia de Conteúdo possui estrutura AIDA e chamadas para ação (CTAs) eficientes.")
+                            evidences = json_data.get("evidences", [])
+                            if isinstance(evidences, list):
+                                for ev in evidences:
+                                    report["findings"]["evidences"].append("Arsenal Social: " + str(ev))
                             
+                            verdict = json_data.get("social_verdict", "")
+                            if verdict:
+                                briefing["recomendacoes"].append(f"VEREDITO DO ARSENAL SOCIAL: {verdict}")
+                            
+                            report["internal_briefing_for_boss"] = json_data.get("internal_boss_ammo", "")
+                            report["internal_briefing_for_alchemist"] = json_data.get("alchemist_briefing", "")
+                            
+                            bio_audit = json_data.get("bio_audit", "")
+                            if "Miopia" in bio_audit or "Dissonância" in bio_audit or "Vácuo" in bio_audit:
+                                score -= 30
+                                briefing["brechas_diferenciacao"].append(f"Miopia de Posicionamento: {bio_audit}")
+                            
+                            friction = json_data.get("conversion_friction", "")
+                            if friction:
+                                briefing["pontos_negativos"].append(f"Furo no Funil Social: {friction}")
+                                
+                            if "Panfleto" in json_data.get("grid_conversion_capacity", ""):
+                                score -= 20
+                                briefing["pontos_negativos"].append("Síndrome do Perfil Panfleto (Baixa Conversão)")
+                            
+                            briefing["recomendacoes"].extend(json_data.get("strategic_actions", []))
+                
                 except Exception as ai_err:
-                    error_str = str(ai_err)
-                    if "429" in error_str or "RESOURCE_EXHAUSTED" in error_str:
-                        if self.openai_api_key:
-                            try:
-                                from openai import OpenAI
-                                openai_client = OpenAI(api_key=self.openai_api_key)
-                                oai_response = openai_client.chat.completions.create(
-                                    model="gpt-4o-mini",
-                                    messages=[
-                                        {"role": "system", "content": "You are an API that outputs valid JSON only."},
-                                        {"role": "user", "content": prompt}
-                                    ],
-                                    response_format={ "type": "json_object" },
-                                    temperature=0.1
-                                )
-                                raw_text = oai_response.choices[0].message.content
-                                if raw_text:
-                                    start_idx = raw_text.find('{')
-                                    end_idx = raw_text.rfind('}')
-                                    if start_idx != -1 and end_idx != -1 and end_idx > start_idx:
-                                        raw_text = raw_text[start_idx:end_idx+1]
-                                    ai_data = json.loads(raw_text)
-                                    is_profile_selling = ai_data.get("is_profile_selling", False)
-                                    report["findings"].update({
-                                        "is_profile_selling": is_profile_selling,
-                                        "sales_alignment": ai_data.get("sales_alignment", ""),
-                                        "authority_triggers": ai_data.get("authority_triggers", ""),
-                                        "content_ideas": ai_data.get("content_ideas", [])
-                                    })
-                                    for ev in ai_data.get("evidences", []):
-                                        report["findings"]["evidences"].append("Análise de IA: " + ev)
-                                        
-                                    if not is_profile_selling:
-                                        briefing["brechas_diferenciacao"].append("Conteúdo genérico ou sem CTA clara focado em Vendas.")
-                                        report["critical_pains"].append("Anti-AIDA: Perfil não passa autoridade firme para vendas.")
-                                        score -= 35 # Penalização
-                            except Exception as fallback_e:
-                                report["critical_pains"].append(f"Limite do Gemini e falha no Fallback OpenAI.")
-                        else:
-                            report["critical_pains"].append("Cota de IA (Gemini 429) excedida em Social Media.")
-                    else:
-                        report["critical_pains"].append(f"Erro ao gerar veredito de Social Media: {ai_err}")
+                    print(f"  [Social Agent] Falha na cognição Arsenal: {ai_err}")
+                    report["critical_pains"].append("O Auditor de Atenção falhou na análise forense via IA.")
 
             report["score"] = max(0, score)
             
-            if report["score"] > 80:
-                report["findings"]["engagement_estimate"] = "Saudável (Ativo e Vendendo)"
-            elif report["score"] > 50:
-                report["findings"]["engagement_estimate"] = "Mediano (Precisa de Funil de Vendas Direcionado)"
+            # Veredito Final de Arsenal
+            if report["score"] >= 80:
+                report["findings"]["engagement_estimate"] = "Ativo de Atenção Estratégico"
+            elif report["score"] >= 50:
+                report["findings"]["engagement_estimate"] = "Miopia de Posicionamento Moderada"
             else:
-                report["findings"]["engagement_estimate"] = "Crítico (Panfletário ou Abandonado)"
+                report["findings"]["engagement_estimate"] = "Vácuo de Autoridade / Panfleto Digital"
 
         except Exception as e:
-            report["critical_pains"].append(f"Falha na conexão com Apify para '{self.target_handle}': {str(e)}")
-            report["score"] = 10
-            briefing["pontos_negativos"].append("Não foi possível acessar os dados do Instagram.")
+            report["critical_pains"].append(f"Erro no Drone de Auditoria Social: {str(e)}")
+            report["score"] = 0
+            briefing["pontos_negativos"].append("Drone abatido: Incapaz de processar dados sociais.")
 
         report["boss_briefing"] = briefing
         return report

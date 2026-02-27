@@ -21,6 +21,7 @@ export interface PredatorParams {
     city: string;
     instagram: string;
     linkedin: string;
+    selectedAgents?: string[];
 }
 
 export async function runPythonOrchestrator(params: PredatorParams): Promise<PythonReport> {

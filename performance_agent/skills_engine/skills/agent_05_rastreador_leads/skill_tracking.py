@@ -1,15 +1,25 @@
 import re
+import os
+import json
+from google import genai
+from google.genai import types
 from skills_engine.core import PredatorSkill
 
 class TrackingSkill(PredatorSkill):
     def __init__(self, target_url):
         super().__init__(target_url)
+        
+        from dotenv import load_dotenv
+        load_dotenv(dotenv_path=".env")
+        load_dotenv(dotenv_path="../raio-x-digital/.env.local")
+        
+        self.api_key = os.getenv("GEMINI_API_KEY")
 
     def execute(self) -> dict:
         """
         Caça pixels de conversão, Analytics, GTM, UTMs, botão de WhatsApp,
         sinais de Google Ads ativo e Meta Ads ativo no corpo do HTML.
-        Gera um boss_briefing com recomendações concretas.
+        Gera um boss_briefing com recomendações concretas e usa IA para análise estratégica.
         """
         briefing = self._empty_boss_briefing()
         
@@ -51,7 +61,6 @@ class TrackingSkill(PredatorSkill):
             report["critical_pains"].append("Cegueira Completa de Eventos (GTM Inexistente). Impossível otimizar CPA sem ele.")
             report["findings"]["evidences"].append("O container 'GTM-XXXX' não foi encontrado em nenhuma linha do código-fonte analisado.")
             briefing["pontos_negativos"].append("Ausência total do Google Tag Manager.")
-            briefing["recomendacoes"].append("Boss, essa empresa não tem GTM. Se instalar, ela centraliza todas as tags (Analytics, Pixel, conversões) num único painel e consegue rastrear cada clique sem precisar de programador.")
 
         # =============================================
         # 2. GOOGLE ANALYTICS (GA4 / UA)
@@ -64,7 +73,6 @@ class TrackingSkill(PredatorSkill):
             report["critical_pains"].append("Tráfego Amador: A empresa não sabe de onde vêm os visitantes (Google Analytics Ausente).")
             report["findings"]["evidences"].append("A varredura completa do head/body HTML não detectou scripts 'gtag.js' do Google Analytics.")
             briefing["pontos_negativos"].append("Sem Google Analytics. Não sabem quantos visitantes recebem nem de onde vêm.")
-            briefing["recomendacoes"].append("Boss, sem Analytics essa empresa está completamente cega. Não sabem quantas pessoas visitam o site por dia, qual página mais converte, nem de onde veio cada clique. Se instalar o GA4, ela passa a entender o comportamento do cliente e otimizar o funil.")
 
         # =============================================
         # 3. META PIXEL (Facebook/Instagram)
@@ -88,13 +96,11 @@ class TrackingSkill(PredatorSkill):
                 # Pixel existe mas só com PageView = passivo
                 report["findings"]["meta_ads_details"].append("Pixel instalado mas sem eventos de conversão avançados (apenas PageView). Campanha provavelmente não otimizada.")
                 briefing["pontos_negativos"].append("O Pixel do Meta está instalado mas sem eventos de conversão. Isso indica que não estão rodando campanhas otimizadas ou que o pixel está parado.")
-                briefing["recomendacoes"].append("Boss, o Pixel existe mas está passivo (sem eventos). Se configurar eventos como 'Lead' ou 'Purchase', o algoritmo do Meta começa a aprender quem é o comprador ideal e barateia o custo por conversão.")
         else:
             report["score"] -= 30
             report["critical_pains"].append("Hemorragia de Receita: O site não tem Pixel para remarketing de abandono.")
             report["findings"]["evidences"].append("Pixel da Meta (função 'fbq()') ausente. Usuários não mapeáveis para campanhas no Instagram/Facebook.")
             briefing["pontos_negativos"].append("Sem Meta Pixel. Impossível fazer remarketing para quem já visitou o site.")
-            briefing["recomendacoes"].append("Boss, sem o Pixel do Facebook/Instagram, essa empresa perde todo visitante que entra e sai do site sem comprar. Se instalar o Pixel, ela pode impactar essas pessoas de novo com anúncios de remarketing, que convertem até 10x mais que tráfego frio.")
 
         # =============================================
         # 4. SINAIS DE GOOGLE ADS ATIVO
@@ -125,12 +131,10 @@ class TrackingSkill(PredatorSkill):
         else:
             report["findings"]["google_ads_details"].append("Nenhum sinal de Google Ads encontrado no código-fonte.")
             briefing["pontos_negativos"].append("Sem sinais de Google Ads. A empresa provavelmente não anuncia no Google ou nunca configurou conversões.")
-            briefing["recomendacoes"].append("Boss, não encontrei nenhuma tag do Google Ads no site. Se a empresa quiser aparecer nas primeiras posições do Google imediatamente, precisa configurar campanhas de Search Ads com a tag de conversão instalada para medir o retorno de cada real investido.")
 
         # =============================================
         # 5. UTM LINKS
         # =============================================
-        report["findings"]["has_utm_links"] = False
         if self.soup:
             anchors = self.soup.find_all('a', href=True)
             for a in anchors:
@@ -144,7 +148,6 @@ class TrackingSkill(PredatorSkill):
             report["critical_pains"].append("Gestão de Tráfego Cega: Nenhum link do site mapeia a origem do clique (UTMs ausentes).")
             report["findings"]["evidences"].append("A varredura das tags <a> não encontrou parâmetros 'utm_source' ou 'utm_medium'.")
             briefing["pontos_negativos"].append("Sem UTMs nos links internos. Não conseguem saber qual canal (Instagram, Email, Google) gera mais vendas.")
-            briefing["recomendacoes"].append("Boss, essa empresa não usa UTMs. Se taguear os links que compartilham (Instagram, email marketing, WhatsApp), passa a saber exatamente qual canal de marketing traz mais clientes e pode investir mais no que funciona.")
         else:
             briefing["pontos_positivos"].append("Links com parâmetros UTM detectados, indicando rastreamento de origens de tráfego.")
 
@@ -155,18 +158,15 @@ class TrackingSkill(PredatorSkill):
         whatsapp_number = None
         
         if self.soup:
-            # Procura links para WhatsApp
             for a in self.soup.find_all('a', href=True):
                 href = a['href']
                 if 'wa.me/' in href or 'api.whatsapp.com' in href or 'whatsapp' in href.lower():
                     whatsapp_found = True
-                    # Extrai número
                     num_match = re.search(r'(?:wa\.me/|phone=)(\d+)', href)
                     if num_match:
                         whatsapp_number = num_match.group(1)
                     break
             
-            # Procura widgets de WhatsApp comuns
             if not whatsapp_found:
                 for tag in self.soup.find_all(['div', 'a', 'button', 'img'], class_=True):
                     classes = ' '.join(tag.get('class', []))
@@ -174,7 +174,6 @@ class TrackingSkill(PredatorSkill):
                         whatsapp_found = True
                         break
         
-        # Fallback: procura no HTML cru
         if not whatsapp_found:
             if 'wa.me/' in html_lower or 'api.whatsapp.com' in html_lower:
                 whatsapp_found = True
@@ -192,31 +191,126 @@ class TrackingSkill(PredatorSkill):
             report["critical_pains"].append("Canal de Vendas Diretas Ausente: Não existe botão de WhatsApp visível no site.")
             report["findings"]["evidences"].append("Nenhum link para 'wa.me/', 'api.whatsapp.com' ou widget de WhatsApp detectado no DOM.")
             briefing["pontos_negativos"].append("Sem botão de WhatsApp no site. O visitante não tem um canal direto e imediato de contato.")
-            briefing["recomendacoes"].append("Boss, essa empresa não tem botão de WhatsApp no site. Hoje, mais de 70% das vendas de serviços no Brasil passam pelo WhatsApp. Se colocar um botão flutuante com mensagem pré-pronta, a taxa de conversão pode aumentar drasticamente.")
 
         # =============================================
-        # CÁLCULO DE MATURIDADE DE DADOS
+        # 7. ANÁLISE CONSULTIVA VIA IA (Arsenal Activation)
         # =============================================
-        active_tools = sum([
-            report["findings"]["has_gtm"],
-            report["findings"]["has_ga4_base"],
-            report["findings"]["has_meta_pixel"],
-            report["findings"]["has_utm_links"],
-            report["findings"]["has_whatsapp_button"],
-            report["findings"]["has_google_ads_signals"]
-        ])
-        
-        if active_tools >= 5:
-            report["findings"]["data_maturity_level"] = "Avançado"
-        elif active_tools >= 3:
-            report["findings"]["data_maturity_level"] = "Intermediário"
-        elif active_tools >= 1:
-            report["findings"]["data_maturity_level"] = "Básico"
-        else:
-            report["findings"]["data_maturity_level"] = "Cego"
+        if self.api_key:
+            try:
+                client = genai.Client(api_key=self.api_key)
+                
+                context_data = {
+        import google.generativeai as genai
+        from google.generativeai.types import GenerateContentResponse
+        import json
+        import os
 
-        # Ensure score doesn't go below 0
-        report["score"] = max(0, report["score"])
+        score = report["score"] # Initialize local score variable
+
+        try:
+            if self.api_key:
+                try:
+                    ai_client = genai.Client(api_key=self.api_key)
+                    
+                    # Prepare findings for the new prompt structure
+                    pixels_found_list = []
+                    if report["findings"]["has_gtm"]:
+                        pixels_found_list.append("Google Tag Manager")
+                    if report["findings"]["has_ga4_base"]:
+                        pixels_found_list.append("Google Analytics (GA4/UA)")
+                    if report["findings"]["has_meta_pixel"]:
+                        pixels_found_list.append("Meta Pixel")
+                    if report["findings"]["has_google_ads_signals"]:
+                        pixels_found_list.append("Google Ads Conversion/Remarketing")
+                    
+                    findings_for_prompt = {
+                        "pixels_found": ", ".join(pixels_found_list) if pixels_found_list else "Nenhum pixel/tag principal detectado",
+                        "has_gtm": report["findings"]["has_gtm"],
+                        "has_ga4": report["findings"]["has_ga4_base"], # Using has_ga4_base as has_ga4
+                    }
+
+                    prompt = f"""
+                    PERSONA:
+                    Você é o 'Perito em Tráfego' (Agente 05), um auditor técnico implacável focado em ROI e Infraestrutura de Conversão.
+                    Seu Arsenal inclui o 'Farejador de Tags de Conversão' e o 'Analista de Desperdício de Verba'.
+                    Sua missão é dar o 'Veredito de ROI Negativo' e mapear o 'Furo no Balde de Ads'.
+
+                    EQUIPAMENTO DE RECONHECIMENTO (DADOS):
+                    - Tags Detectadas no Site: {findings_for_prompt["pixels_found"]}
+                    - Falta de GTM: {not findings_for_prompt["has_gtm"]}
+                    - Falta de GA4: {not findings_for_prompt["has_ga4"]}
+                    - Site do Alvo: {self.target_url}
+                    
+                    SUA MISSÃO FORENSE:
+                    1. VEREDITO DE ROI NEGATIVO: Se a empresa anunciar hoje, ela conseguirá medir o retorno ou está jogando dinheiro no escuro?
+                    2. MAPEAMENTO DE FURO NO BALDE: Quais canais (Meta, Google, etc) estão sem rastreio e perdendo público de remarketing?
+                    3. SENTENÇA DE SETUP AMADOR: A infraestrutura atual é digna de uma empresa que fatura alto ou de um amador?
+                    4. ANALISTA DE DESPERDÍCIO: Estime o impacto de não ter remarketing ativo na perda de leads.
+
+                    JSON OUTPUT FORMAT:
+                    {{
+                        "infrastructure_status": "Status (ex: Cego / Míope / Profissional)",
+                        "roi_measurement_verdict": "Veredito técnico sobre a medição de retorno",
+                        "tracking_gap_analysis": "Onde estão os furos técnicos no balde de ads?",
+                        "amateur_setup_sentence": "Sentença implacável sobre o setup atual.",
+                        "waste_estimate": "Estimativa de impacto financeiro (perda de leads)",
+                        "internal_boss_ammo": "Munição de dor sobre desperdício de dinheiro para o Boss.",
+                        "alchemist_briefing": "Dica para o Agente 07 focar na oferta de 'Recuperação de Leads'.",
+                        "strategic_actions": ["Ação técnica 1", "Ação técnica 2"],
+                        "traffic_verdict": "Veredito final de 2-3 linhas para o dossiê."
+                    }}
+                    """
+
+                    response = ai_client.models.generate_content(
+                        model='gemini-2.0-flash',
+                        contents=prompt,
+                        config=genai.types.GenerateContentConfig(
+                            temperature=0.1,
+                            response_mime_type="application/json"
+                        )
+                    )
+
+                    if response.text:
+                        json_data = json.loads(response.text)
+                        if isinstance(json_data, dict):
+                            report["findings"].update(json_data)
+                            
+                            verdict = json_data.get("traffic_verdict", "")
+                            if verdict:
+                                briefing["recomendacoes"].append(f"VEREDITO DO PERITO EM TRÁFEGO: {verdict}")
+                            
+                            roi_verdict = json_data.get("roi_measurement_verdict", "")
+                            if "Negativo" in str(roi_verdict) or "Impossível" in str(roi_verdict) or "Escuro" in str(roi_verdict):
+                                score -= 30
+                                briefing["pontos_negativos"].append(f"Risco de ROI Cego: {roi_verdict}")
+                            
+                            gap = json_data.get("tracking_gap_analysis", "")
+                            if gap:
+                                briefing["pontos_negativos"].append(f"Furo no Balde de Ads: {gap}")
+                            
+                            report["internal_briefing_for_boss"] = json_data.get("internal_boss_ammo", "")
+                            report["internal_briefing_for_alchemist"] = json_data.get("alchemist_briefing", "")
+                            
+                            briefing["recomendacoes"].extend(json_data.get("strategic_actions", []))
+
+                except Exception as ai_err:
+                    print(f"  [Traffic Agent] Falha na cognição Arsenal: {ai_err}")
+                    report["critical_pains"].append("O Perito em Tráfego falhou na análise forense via IA.")
+
+            report["score"] = max(0, score)
+            
+            # Veredito Final de Arsenal
+            if report["score"] >= 80:
+                report["findings"]["setup_quality"] = "Infraestrutura de Elite"
+            elif report["score"] >= 50:
+                report["findings"]["setup_quality"] = "Miopia Digital Técnica"
+            else:
+                report["findings"]["setup_quality"] = "Cegueira de Dados / ROI em Risco"
+
+        except Exception as e:
+            report["critical_pains"].append(f"Erro no Drone de Tráfego: {str(e)}")
+            report["score"] = 0
+            briefing["pontos_negativos"].append("Drone abatido: Incapaz de auditar infraestrutura de tráfego.")
+
         report["boss_briefing"] = briefing
-        
         return report

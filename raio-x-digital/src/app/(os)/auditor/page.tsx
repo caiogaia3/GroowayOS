@@ -11,6 +11,8 @@ import { getAuditHistory, AuditHistoryItem } from '@/features/xray-auditor/actio
 import { loadReportById } from '@/features/xray-auditor/actions/load_report';
 import { getValuePropositionFromReport, ValuePropositionData } from '@/features/xray-auditor/actions/get_value_proposition';
 import { ValuePropositionModal } from '@/features/xray-auditor/components/ValuePropositionModal';
+import { DiagnosticPDF } from '@/components/export/DiagnosticPDF';
+import { ProposalPDF } from '@/components/export/ProposalPDF';
 
 type AppState = 'input' | 'analyzing' | 'result';
 
@@ -22,6 +24,19 @@ export default function DigitalPredatorScanner() {
   const [activeTab, setActiveTab] = useState('tracking');
   const [instagram, setInstagram] = useState('');
   const [linkedin, setLinkedin] = useState('');
+
+  const AVAILABLE_AGENTS = [
+    { id: 'tracking', label: 'Tracking & Infraestrutura', default: true },
+    { id: 'performance', label: 'UX & SEO Técnico', default: true },
+    { id: 'market', label: 'Pesquisa de Mercado', default: true },
+    { id: 'social', label: 'Mapeamento Social', default: true },
+    { id: 'gmb', label: 'Google Meu Negócio', default: true },
+    { id: 'keywords', label: 'Palavras-Chave & Ads', default: true },
+  ];
+
+  const [selectedAgents, setSelectedAgents] = useState<string[]>(
+    AVAILABLE_AGENTS.filter(a => a.default).map(a => a.id)
+  );
 
   const [progress, setProgress] = useState(0);
   const [analysisText, setAnalysisText] = useState('Autenticando...');
@@ -103,7 +118,8 @@ export default function DigitalPredatorScanner() {
       companyName,
       city,
       instagram,
-      linkedin
+      linkedin,
+      selectedAgents
     }).then(result => {
       localReport = result;
       isApiDone = true;
@@ -156,6 +172,33 @@ export default function DigitalPredatorScanner() {
   const cmoSkill = reportData?.skills_results.find(s => s.name === "Senior CMO Agent (Business & Sales)");
   const gmbSkill = reportData?.skills_results.find(s => s.name === "Google My Business Auditor (Local SEO)");
   const keywordSkill = reportData?.skills_results.find(s => s.name === "Keyword Research Agent");
+  const designSkill = reportData?.skills_results.find(s => s.name === "Design & Translation Agent");
+
+  const [isGeneratingDiagnosticPDF, setIsGeneratingDiagnosticPDF] = useState(false);
+  const [isGeneratingProposalPDF, setIsGeneratingProposalPDF] = useState(false);
+
+  const handleGenerateDiagnosticPDF = async () => {
+    if (!reportData) return;
+    setIsGeneratingDiagnosticPDF(true);
+    // Pequeno delay para garantir renderização antes do print
+    setTimeout(() => {
+      window.print();
+      setIsGeneratingDiagnosticPDF(false);
+    }, 500);
+  };
+
+  const handleGenerateProposalPDF = async () => {
+    if (!reportData) return;
+    setIsGeneratingProposalPDF(true);
+    // Tenta gerar a proposta via IA caso não exista ainda
+    if (!commercialPlan) {
+      await handleGenerateProposal();
+    }
+    setTimeout(() => {
+      window.print();
+      setIsGeneratingProposalPDF(false);
+    }, 500);
+  };
 
   const handleGenerateProposal = async () => {
     if (!reportData) return;
@@ -333,6 +376,43 @@ export default function DigitalPredatorScanner() {
             </div>
           </div>
 
+          <div className="mt-5 border-t border-slate-700/50 pt-5 text-left">
+            <label className="block text-xs font-semibold text-slate-300 mb-3 ml-1">Motores de Análise Inteligente</label>
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+              {AVAILABLE_AGENTS.map((agent) => (
+                <label
+                  key={agent.id}
+                  className={`flex items-center gap-3 p-3 rounded-xl border cursor-pointer transition-all ${selectedAgents.includes(agent.id)
+                    ? 'bg-brand-purple/20 border-brand-purple/50 shadow-inner'
+                    : 'bg-black/20 border-white/5 opacity-60 hover:opacity-100 hover:bg-black/40'
+                    }`}
+                >
+                  <div className="relative flex items-center justify-center">
+                    <input
+                      type="checkbox"
+                      className="peer sr-only"
+                      checked={selectedAgents.includes(agent.id)}
+                      onChange={(e) => {
+                        if (e.target.checked) {
+                          setSelectedAgents((prev) => [...prev, agent.id]);
+                        } else {
+                          setSelectedAgents((prev) => prev.filter((id) => id !== agent.id));
+                        }
+                      }}
+                      disabled={appState === 'analyzing'}
+                    />
+                    <div className="w-5 h-5 rounded border border-slate-500 peer-checked:bg-brand-purple peer-checked:border-brand-purple flex items-center justify-center transition-colors">
+                      {selectedAgents.includes(agent.id) && <CheckCircle2 className="w-3.5 h-3.5 text-white" />}
+                    </div>
+                  </div>
+                  <span className={`text-xs font-semibold select-none ${selectedAgents.includes(agent.id) ? 'text-white' : 'text-slate-400'}`}>
+                    {agent.label}
+                  </span>
+                </label>
+              ))}
+            </div>
+          </div>
+
           <AnimatePresence>
             {showHistory && auditHistory.length > 0 && (
               <motion.div
@@ -440,7 +520,6 @@ export default function DigitalPredatorScanner() {
                       </p>
                     </div>
                     <div className="flex items-center gap-3">
-                      {/* Gerar Proposta de Valor Button */}
                       <button
                         onClick={handleOpenValueProposition}
                         disabled={isLoadingVP}
@@ -1420,6 +1499,16 @@ export default function DigitalPredatorScanner() {
           data={valuePropositionData}
           companyName={companyName || reportData?.target_url || ''}
           onClose={() => setShowValueProposition(false)}
+          onDownloadDiagnostic={handleGenerateDiagnosticPDF}
+        />
+      )}
+      {/* Hidden PDF Content for Printing */}
+      <DiagnosticPDF reportData={reportData} designSkill={designSkill} />
+      {reportData && (
+        <ProposalPDF
+          reportData={reportData}
+          designSkill={designSkill}
+          commercialPlan={commercialPlan}
         />
       )}
     </main>

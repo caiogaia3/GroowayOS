@@ -21,14 +21,16 @@ else:
     ssl._create_default_https_context = _create_unverified_https_context
 
 from concurrent.futures import ThreadPoolExecutor
-from skills_engine.skills.skill_tracking import TrackingSkill
-from skills_engine.skills.skill_performance import PerformanceSkill
-from skills_engine.skills.skill_market_research import MarketResearchSkill
-from skills_engine.skills.skill_social_media import SocialMediaResearchSkill
-from skills_engine.skills.skill_senior_analyst import SeniorAnalystSkill
-from skills_engine.skills.skill_google_my_business import GMBAuditorSkill
-from skills_engine.skills.skill_keyword_research import KeywordResearchSkill
-from skills_engine.skills.skill_value_proposition import ValuePropositionSkill
+from skills_engine.skills.agent_05_rastreador_leads.skill_tracking import TrackingSkill
+from skills_engine.skills.agent_02_perito_site.skill_performance import PerformanceSkill
+from skills_engine.skills.agent_04_espiao_mercado.skill_market_research import MarketResearchSkill
+from skills_engine.skills.agent_03_auditor_atencao.skill_social_media import SocialMediaResearchSkill
+from skills_engine.skills.agent_08_tribunal_boss.skill_senior_analyst import SeniorAnalystSkill
+from skills_engine.skills.agent_01_detetive_gmb.skill_google_my_business import GMBAuditorSkill
+from skills_engine.skills.agent_06_maestro_ads.skill_keyword_research import KeywordResearchSkill
+from skills_engine.skills.agent_07_alquimista_ofertas.skill_value_proposition import ValuePropositionSkill
+from skills_engine.skills.agent_09_sniper_fechamento.skill_closer import CloserSkill
+from skills_engine.skills.agent_10_design_visionary.skill_design_translation import DesignTranslationSkill
 
 class PredatorOrchestrator:
     def __init__(self, params):
@@ -43,26 +45,44 @@ class PredatorOrchestrator:
         self._register_skills()
 
     def _register_skills(self):
-        self.skills.append(TrackingSkill(self.target_url))
-        self.skills.append(PerformanceSkill(self.target_url))
-        self.skills.append(MarketResearchSkill(self.target_url, self.params))
+        # Array of selected agents passed from the frontend UI
+        selected_agents = self.params.get("selectedAgents", [])
         
-        insta_url = self.params.get("instagram", "")
-        insta_url = insta_url.strip().rstrip("/")
-        handle = insta_url.split("/")[-1].replace("@", "") if insta_url else self.target_url.split("://")[-1].split(".")[0]
-        self.skills.append(SocialMediaResearchSkill(handle))
+        # If no agents are selected or the parameter is missing, default to running all frontier agents
+        if not selected_agents:
+            selected_agents = ["tracking", "performance", "market", "social", "gmb", "keywords"]
+
+        if "tracking" in selected_agents:
+            self.skills.append(TrackingSkill(self.target_url))
+        if "performance" in selected_agents:
+            self.skills.append(PerformanceSkill(self.target_url))
+        if "market" in selected_agents:
+            self.skills.append(MarketResearchSkill(self.target_url, self.params))
+            
+        if "social" in selected_agents:
+            insta_url = self.params.get("instagram", "")
+            insta_url = insta_url.strip().rstrip("/")
+            handle = insta_url.split("/")[-1].replace("@", "") if insta_url else self.target_url.split("://")[-1].split(".")[0]
+            self.skills.append(SocialMediaResearchSkill(handle))
+            
+        if "gmb" in selected_agents:
+            self.skills.append(GMBAuditorSkill(self.target_url, self.params))
+            
+        if "keywords" in selected_agents:
+            self.skills.append(KeywordResearchSkill(self.target_url, self.params))
         
-        # Skill do Auditor Local de GMB
-        self.skills.append(GMBAuditorSkill(self.target_url, self.params))
-        
-        # Skill de Pesquisa de Palavras-Chave (NOVO)
-        self.skills.append(KeywordResearchSkill(self.target_url, self.params))
-        
+        # --- COMPILATION AGENTS (ALWAYS RUN) ---
         # Skill do Diretor de Marketing Implacável (O Boss)
         self.skills.append(SeniorAnalystSkill(self.target_url, self.params))
         
-        # Skill Complementar do Boss: Proposta de Valor Irresistível (SEMPRE POR ÚLTIMO)
+        # Skill Complementar do Boss: Proposta de Valor Irresistível
         self.skills.append(ValuePropositionSkill(self.target_url, self.params))
+        
+        # O GOLPE DE MISERICÓRDIA: O Fechador (SEMPRE O ÚLTIMO)
+        self.skills.append(CloserSkill(self.target_url, self.params))
+
+        # O TRADUTOR DIDÁTICO E DESIGNER (Prepara o PDF)
+        self.skills.append(DesignTranslationSkill(self.target_url, self.params))
 
     def _fetch_target(self):
         """Faz a requisição vital 1 única vez para não afogar o servidor alvo e passa o HTML pras skills."""
@@ -105,8 +125,8 @@ class PredatorOrchestrator:
         for skill in self.skills:
             try:
                 print(f"  -> Executando {skill.__class__.__name__}...")
-                # Se a skill da vez for o CMO, enviamos o boss_briefing de cada agente anterior
-                if isinstance(skill, (SeniorAnalystSkill, ValuePropositionSkill)):
+                # Se a skill da vez for estratégica, enviamos o boss_briefing de cada agente anterior
+                if isinstance(skill, (SeniorAnalystSkill, ValuePropositionSkill, CloserSkill)):
                     previous_context = {}
                     for r in master_report["skills_results"]:
                         agent_name = r.get("name", "unknown")
@@ -114,7 +134,9 @@ class PredatorOrchestrator:
                             "findings": r.get("findings", {}),
                             "boss_briefing": r.get("boss_briefing", {}),
                             "score": r.get("score", 0),
-                            "critical_pains": r.get("critical_pains", [])
+                            "critical_pains": r.get("critical_pains", []),
+                            "internal_briefing_for_boss": r.get("internal_briefing_for_boss", ""),
+                            "internal_briefing_for_alchemist": r.get("internal_briefing_for_alchemist", "")
                         }
                     result = self._run_skill(skill, previous_results_context=previous_context)
                 else:

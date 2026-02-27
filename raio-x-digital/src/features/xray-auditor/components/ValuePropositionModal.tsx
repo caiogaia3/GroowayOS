@@ -22,12 +22,14 @@ interface ValuePropositionModalProps {
   data: ValuePropositionData;
   companyName: string;
   onClose: () => void;
+  onDownloadDiagnostic: () => void;
 }
 
 export function ValuePropositionModal({
   data,
   companyName,
   onClose,
+  onDownloadDiagnostic
 }: ValuePropositionModalProps) {
   const [isDownloading, setIsDownloading] = useState(false);
 
@@ -199,6 +201,13 @@ export function ValuePropositionModal({
                 Fechar
               </button>
               <button
+                onClick={onDownloadDiagnostic}
+                className="flex items-center gap-2 px-5 py-2.5 text-sm font-bold bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white rounded-full transition-all shadow-lg shadow-cyan-500/30 hover:shadow-cyan-500/50 hover:scale-105 active:scale-95"
+              >
+                <FileText className="w-4 h-4" />
+                Baixar Diagnóstico (PDF)
+              </button>
+              <button
                 onClick={handleDownloadPDF}
                 disabled={isDownloading}
                 className="flex items-center gap-2 px-5 py-2.5 text-sm font-bold bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white rounded-full transition-all shadow-lg shadow-violet-500/30 hover:shadow-violet-500/50 hover:scale-105 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
@@ -214,7 +223,7 @@ export function ValuePropositionModal({
           </div>
         </motion.div>
       </motion.div>
-    </AnimatePresence>
+    </AnimatePresence >
   );
 }
 
