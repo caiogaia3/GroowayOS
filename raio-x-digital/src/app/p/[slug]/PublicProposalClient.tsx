@@ -3,15 +3,38 @@
 import { Proposal } from "@/features/proposals/lib/types";
 import { motion, AnimatePresence } from "framer-motion";
 import { Check, ArrowRight, Download, Brain, Search, BarChart3, Clock, Rocket, Shield, Activity, FileText } from "lucide-react";
+import { useState, useEffect, useRef } from "react";
+import { updateProposalViewTime, markProposalPdfDownloaded } from "@/features/proposals/actions/get_public_proposal";
 
 interface Props {
     proposal: Proposal;
     content: any;
+    viewId: string | null;
 }
 
-export default function PublicProposalClient({ proposal, content }: Props) {
+export default function PublicProposalClient({ proposal, content, viewId }: Props) {
     const header = content.header || {};
     const sections = content.sections || [];
+
+    const timeSpentRef = useRef(0);
+
+    useEffect(() => {
+        if (!viewId) return;
+
+        const interval = setInterval(() => {
+            timeSpentRef.current += 10;
+            updateProposalViewTime(viewId, timeSpentRef.current).catch(console.error);
+        }, 10000); // ping every 10 seconds
+
+        return () => clearInterval(interval);
+    }, [viewId]);
+
+    const handleDownloadPdf = async () => {
+        if (viewId) {
+            await markProposalPdfDownloaded(viewId).catch(console.error);
+        }
+        setTimeout(() => window.print(), 100);
+    };
 
     const getIcon = (iconName: string, className: string = "w-5 h-5") => {
         switch (iconName) {
@@ -39,9 +62,7 @@ export default function PublicProposalClient({ proposal, content }: Props) {
                 </div>
                 <button
                     className="flex items-center gap-2 px-4 py-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-full transition-colors text-sm font-semibold"
-                    onClick={() => {
-                        setTimeout(() => window.print(), 100);
-                    }}
+                    onClick={handleDownloadPdf}
                 >
                     <Download className="w-4 h-4" /> Salvar em PDF
                 </button>

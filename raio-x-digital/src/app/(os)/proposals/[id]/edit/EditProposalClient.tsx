@@ -1,10 +1,11 @@
 "use client"
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Proposal, ProposalVersion } from "@/features/proposals/lib/types";
-import { updateProposalContent } from "@/features/proposals/actions/update_proposal";
+import { updateProposalContent, saveProposalAsTemplate } from "@/features/proposals/actions/update_proposal";
 import { useRouter } from "next/navigation";
-import { Loader2, Save, Send, CheckCircle, Eye } from "lucide-react";
+import { Loader2, Save, Send, CheckCircle, Eye, Code, LayoutTemplate, BookmarkPlus } from "lucide-react";
+import VisualEditor from "./VisualEditor";
 
 interface Props {
     proposal: Proposal;
@@ -12,21 +13,29 @@ interface Props {
 }
 
 export default function EditProposalClient({ proposal, initialVersion }: Props) {
+    const [parsedContent, setParsedContent] = useState<any>(initialVersion.content);
     const [contentStr, setContentStr] = useState(JSON.stringify(initialVersion.content, null, 2));
+    const [isVisualMode, setIsVisualMode] = useState(true);
     const [isSaving, setIsSaving] = useState(false);
     const [isPublishing, setIsPublishing] = useState(false);
+    const [isSavingTemplate, setIsSavingTemplate] = useState(false);
+    const [templateNameInput, setTemplateNameInput] = useState('');
+    const [showTemplateModal, setShowTemplateModal] = useState(false);
     const [error, setError] = useState('');
     const router = useRouter();
 
     const handleSave = async (publish: boolean = false) => {
         setError('');
 
-        let parsedContent;
-        try {
-            parsedContent = JSON.parse(contentStr);
-        } catch (e) {
-            setError('JSON Inválido. Corrija o formato antes de salvar.');
-            return;
+        let finalContent = parsedContent;
+        if (!isVisualMode) {
+            try {
+                finalContent = JSON.parse(contentStr);
+                setParsedContent(finalContent);
+            } catch (e) {
+                setError('JSON Inválido. Corrija o formato antes de salvar.');
+                return;
+            }
         }
 
         if (publish) setIsPublishing(true);
@@ -35,7 +44,7 @@ export default function EditProposalClient({ proposal, initialVersion }: Props) 
         const newStatus = publish ? 'sent' : proposal.status;
 
         try {
-            const success = await updateProposalContent(proposal.id, proposal.current_version, parsedContent, newStatus);
+            const success = await updateProposalContent(proposal.id, proposal.current_version, finalContent, newStatus);
             if (success) {
                 if (publish) {
                     router.push(`/proposals/${proposal.id}/share`);
@@ -51,6 +60,41 @@ export default function EditProposalClient({ proposal, initialVersion }: Props) 
         } finally {
             setIsSaving(false);
             setIsPublishing(false);
+        }
+    };
+
+    const handleSaveTemplate = async () => {
+        if (!templateNameInput.trim()) {
+            setError('Digite um nome para o modelo.');
+            return;
+        }
+
+        let finalContent = parsedContent;
+        if (!isVisualMode) {
+            try {
+                finalContent = JSON.parse(contentStr);
+                setParsedContent(finalContent);
+            } catch (e) {
+                setError('JSON Inválido. Corrija o formato antes de salvar.');
+                return;
+            }
+        }
+
+        setIsSavingTemplate(true);
+        setError('');
+        try {
+            const success = await saveProposalAsTemplate(proposal.id, templateNameInput, finalContent);
+            if (success) {
+                setShowTemplateModal(false);
+                setTemplateNameInput('');
+                alert('Modelo salvo com sucesso no Banco de Referências!');
+            } else {
+                setError('Erro ao salvar modelo.');
+            }
+        } catch (e) {
+            setError('Erro ao salvar modelo.');
+        } finally {
+            setIsSavingTemplate(false);
         }
     };
 
@@ -77,6 +121,15 @@ export default function EditProposalClient({ proposal, initialVersion }: Props) 
                         <Eye className="w-4 h-4" />
                         Preview
                     </button>
+                    {!proposal.is_template && (
+                        <button
+                            onClick={() => setShowTemplateModal(true)}
+                            className="flex items-center justify-center gap-2 bg-amber-500/10 hover:bg-amber-500/20 text-amber-500 border border-amber-500/20 px-4 py-2 rounded-lg font-medium transition-colors text-sm"
+                        >
+                            <BookmarkPlus className="w-4 h-4" />
+                            Salvar como Modelo
+                        </button>
+                    )}
                     <button
                         onClick={() => handleSave(false)}
                         disabled={isSaving || isPublishing}
@@ -102,18 +155,98 @@ export default function EditProposalClient({ proposal, initialVersion }: Props) 
                 </div>
             )}
 
-            <div className="flex-1 w-full bg-[#0B0F19] border border-white/10 rounded-xl overflow-hidden flex flex-col">
-                <div className="bg-white/5 px-4 py-2 border-b border-white/10 flex items-center justify-between">
-                    <span className="text-xs font-mono text-slate-400">content.json (JSON Estruturado)</span>
-                    <span className="text-xs text-yellow-500">Cuidado ao editar as chaves do JSON</span>
+            <div className={`flex-1 w-full ${!isVisualMode ? 'bg-[#0B0F19] border border-white/10 rounded-xl overflow-hidden' : ''} flex flex-col`}>
+                <div className="flex items-center gap-2 mb-6">
+                    <button
+                        onClick={() => {
+                            if (!isVisualMode) {
+                                try {
+                                    setParsedContent(JSON.parse(contentStr));
+                                    setError('');
+                                    setIsVisualMode(true);
+                                } catch (e) {
+                                    setError('JSON Inválido. Não é possível mudar para o modo visual.');
+                                }
+                            } else {
+                                setIsVisualMode(true);
+                            }
+                        }}
+                        className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${isVisualMode ? 'bg-purple-600/20 text-purple-400 border border-purple-500/20' : 'text-neutral-400 hover:bg-white/5'}`}
+                    >
+                        <LayoutTemplate className="w-4 h-4" /> Visual
+                    </button>
+                    <button
+                        onClick={() => {
+                            if (isVisualMode) {
+                                setContentStr(JSON.stringify(parsedContent, null, 2));
+                            }
+                            setIsVisualMode(false);
+                        }}
+                        className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${!isVisualMode ? 'bg-purple-600/20 text-purple-400 border border-purple-500/20' : 'text-neutral-400 hover:bg-white/5'}`}
+                    >
+                        <Code className="w-4 h-4" /> Avançado (JSON)
+                    </button>
                 </div>
-                <textarea
-                    value={contentStr}
-                    onChange={(e) => setContentStr(e.target.value)}
-                    className="w-full flex-1 min-h-[60vh] bg-transparent p-4 font-mono text-sm text-slate-300 resize-none focus:outline-none focus:ring-inset focus:ring-1 focus:ring-brand-purple/50 custom-scrollbar"
-                    spellCheck="false"
-                />
+
+                {isVisualMode ? (
+                    <VisualEditor content={parsedContent} setContent={setParsedContent} />
+                ) : (
+                    <>
+                        <div className="bg-white/5 px-4 py-2 border-b border-white/10 flex items-center justify-between mt-0">
+                            <span className="text-xs font-mono text-slate-400">content.json (JSON Estruturado)</span>
+                            <span className="text-xs text-yellow-500">Cuidado ao editar as chaves do JSON</span>
+                        </div>
+                        <textarea
+                            value={contentStr}
+                            onChange={(e) => setContentStr(e.target.value)}
+                            className="w-full flex-1 min-h-[60vh] bg-transparent p-4 font-mono text-sm text-slate-300 resize-none focus:outline-none focus:ring-inset focus:ring-1 focus:ring-brand-purple/50 custom-scrollbar"
+                            spellCheck="false"
+                        />
+                    </>
+                )}
             </div>
+
+            {/* Modal de Salvar Modelo */}
+            {showTemplateModal && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+                    <div className="bg-neutral-900 border border-white/10 rounded-2xl w-full max-w-md p-6 overflow-hidden">
+                        <h3 className="text-xl font-bold text-white mb-2">Salvar como Modelo</h3>
+                        <p className="text-sm text-neutral-400 mb-6">
+                            Esta proposta será salva no Banco de Referências para ser usada rapidamente em futuros projetos.
+                        </p>
+
+                        <div className="mb-6">
+                            <label className="block text-xs font-medium text-neutral-400 mb-1.5">Nome do Modelo</label>
+                            <input
+                                autoFocus
+                                type="text"
+                                placeholder="E.g. Proposta Padrão Tráfego Local"
+                                value={templateNameInput}
+                                onChange={(e) => setTemplateNameInput(e.target.value)}
+                                className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-purple-500"
+                            />
+                        </div>
+
+                        <div className="flex items-center gap-3">
+                            <button
+                                onClick={() => setShowTemplateModal(false)}
+                                disabled={isSavingTemplate}
+                                className="flex-1 px-4 py-2 rounded-lg font-medium text-sm text-neutral-400 hover:text-white hover:bg-white/5 transition-colors"
+                            >
+                                Cancelar
+                            </button>
+                            <button
+                                onClick={handleSaveTemplate}
+                                disabled={isSavingTemplate || !templateNameInput.trim()}
+                                className="flex-1 flex items-center justify-center gap-2 bg-amber-600 hover:bg-amber-700 disabled:opacity-50 text-white px-4 py-2 rounded-lg font-medium text-sm transition-colors"
+                            >
+                                {isSavingTemplate ? <Loader2 className="w-4 h-4 animate-spin" /> : <BookmarkPlus className="w-4 h-4" />}
+                                Salvar Modelo
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

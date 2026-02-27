@@ -24,6 +24,8 @@ export interface Proposal {
     source: ProposalSource;
     report_id: string | null;
     status: ProposalStatus;
+    is_template: boolean;
+    template_name: string | null;
     current_version: number;
     validity_days: number;
     expires_at: string | null;

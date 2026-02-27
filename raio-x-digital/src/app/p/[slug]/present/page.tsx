@@ -1,8 +1,6 @@
-import { getProposalBySlugAndToken, trackProposalView } from "@/features/proposals/actions/get_public_proposal";
+import { getProposalBySlugAndToken } from "@/features/proposals/actions/get_public_proposal";
 import { notFound } from "next/navigation";
-import { headers } from "next/headers";
-import crypto from "crypto";
-import PublicProposalClient from "./PublicProposalClient";
+import PresentProposalClient from "./PresentProposalClient";
 import { Metadata } from "next";
 
 interface PageProps {
@@ -13,12 +11,12 @@ interface PageProps {
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
     const slugParams = await params;
     return {
-        title: `Proposta Comercial - Grooway`,
+        title: `Apresentação Comercial - Grooway`,
         description: `Proposta Estratégica elaborada pela Grooway para acelerar seus resultados.`,
     };
 }
 
-export default async function PublicProposalPage(props: PageProps) {
+export default async function PresentProposalPage(props: PageProps) {
     const { slug } = await props.params;
     const { t: token } = await props.searchParams;
 
@@ -27,7 +25,7 @@ export default async function PublicProposalPage(props: PageProps) {
     if (!data) {
         return (
             <div className="min-h-screen bg-[#020617] text-white flex flex-col items-center justify-center p-6 text-center">
-                <h1 className="text-3xl font-bold text-slate-300 mb-4">Proposta Inacessível</h1>
+                <h1 className="text-3xl font-bold text-slate-300 mb-4">Apresentação Inacessível</h1>
                 <p className="text-slate-500">O link pode estar quebrado ou a proposta não existe mais.</p>
             </div>
         );
@@ -35,20 +33,6 @@ export default async function PublicProposalPage(props: PageProps) {
 
     // Verifica expiração
     const isExpired = data.proposal.expires_at && new Date(data.proposal.expires_at) < new Date();
-
-    let viewId: string | null = null;
-    if (!isExpired) {
-        const headersList = await headers();
-        const forwarded = headersList.get("x-forwarded-for");
-        const ip = forwarded ? forwarded.split(',')[0] : 'unknown-ip';
-        const userAgent = headersList.get("user-agent") || 'unknown';
-
-        // Hash IP for LGPD compliance and tracking unique readers
-        const ipHash = crypto.createHash('sha256').update(ip).digest('hex');
-
-        // Extract view ID
-        viewId = await trackProposalView(data.proposal.id, ipHash, userAgent);
-    }
 
     if (isExpired) {
         return (
@@ -60,12 +44,9 @@ export default async function PublicProposalPage(props: PageProps) {
                 <p className="text-slate-400 max-w-md">
                     O prazo de validade desta proposta encerrou em {new Date(data.proposal.expires_at!).toLocaleDateString('pt-BR')}.
                 </p>
-                <a href="https://wa.me/5511999999999" target="_blank" rel="noreferrer" className="mt-8 px-6 py-3 bg-white/5 border border-white/10 hover:bg-white/10 rounded-xl transition-colors text-sm font-semibold text-slate-300">
-                    Solicitar Renovação
-                </a>
             </div>
         );
     }
 
-    return <PublicProposalClient proposal={data.proposal} content={data.version.content} viewId={viewId} />;
+    return <PresentProposalClient proposal={data.proposal} content={data.version.content} />;
 }

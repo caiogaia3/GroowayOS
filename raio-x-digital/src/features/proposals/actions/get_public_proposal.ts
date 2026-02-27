@@ -38,16 +38,42 @@ export async function getProposalBySlugAndToken(slug: string, token: string | un
 export async function trackProposalView(proposalId: string, ipHash: string, userAgent: string) {
     const supabase = await createClient();
 
-    // In a real app we'd hash the IP properly considering x-forwarded-for etc
-    const { error } = await supabase
+    const { data, error } = await supabase
         .from('proposal_views')
         .insert({
             proposal_id: proposalId,
             viewer_hash: ipHash,
-            user_agent: userAgent
-        });
+            user_agent: userAgent,
+            time_on_page_seconds: 0,
+            downloaded_pdf: false
+        })
+        .select('id')
+        .single();
 
     if (error) {
         console.error("Error tracking view:", error);
+        return null;
     }
+
+    return data.id;
+}
+
+export async function updateProposalViewTime(viewId: string, seconds: number) {
+    if (!viewId) return;
+    const supabase = await createClient();
+
+    await supabase
+        .from('proposal_views')
+        .update({ time_on_page_seconds: seconds })
+        .eq('id', viewId);
+}
+
+export async function markProposalPdfDownloaded(viewId: string) {
+    if (!viewId) return;
+    const supabase = await createClient();
+
+    await supabase
+        .from('proposal_views')
+        .update({ downloaded_pdf: true })
+        .eq('id', viewId);
 }

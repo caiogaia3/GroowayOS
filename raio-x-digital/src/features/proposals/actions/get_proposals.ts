@@ -12,7 +12,10 @@ export async function getProposals(): Promise<Proposal[]> {
     // all authenticated users (the team) can see the proposals.
     const { data, error } = await supabase
         .from('proposals')
-        .select('*')
+        .select(`
+            *
+        `)
+        .eq('is_template', false)
         .order('created_at', { ascending: false });
 
     if (error) {
