@@ -8,6 +8,7 @@ import fs from "fs/promises";
 const execAsync = promisify(exec);
 
 export interface PythonReport {
+    id?: string;
     target_url: string;
     company_name?: string;
     scan_timestamp: number;

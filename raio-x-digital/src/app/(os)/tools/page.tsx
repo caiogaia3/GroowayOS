@@ -63,15 +63,15 @@ export default function ToolsHubPage() {
             status: 'Em Breve'
         },
         {
-            id: 'copy',
-            name: 'Gerador de Propostas',
-            description: 'Criação de PDFs e propostas comerciais automáticas com base nos diagnósticos.',
+            id: 'proposals',
+            name: 'Grooway Proposals',
+            description: 'Gestão e criação de propostas comerciais premium com links dinâmicos e exportação PDF.',
             icon: FileText,
-            color: 'text-indigo-400',
-            bg: 'bg-indigo-500/10',
-            border: 'border-indigo-500/20',
-            href: '#',
-            status: 'Em Breve'
+            color: 'text-purple-400',
+            bg: 'bg-purple-500/10',
+            border: 'border-purple-500/20',
+            href: '/proposals',
+            status: 'Ativo'
         }
     ];
 
