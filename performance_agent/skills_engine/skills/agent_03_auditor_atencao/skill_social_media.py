@@ -234,18 +234,9 @@ class SocialMediaResearchSkill(PredatorSkill):
                         "evidences": ["Trecho literal que prova o vácuo de autoridade"]
                     }}
                     """
-                    response = ai_client.models.generate_content(
-                        model='gemini-2.0-flash',
-                        contents=prompt,
-                        config=types.GenerateContentConfig(
-                            temperature=0.1,
-                            response_mime_type="application/json"
-                        )
-                    )
+                    json_data = self._call_llm_json(prompt)
                     
-                    if response.text:
-                        json_data = json.loads(response.text)
-                        if isinstance(json_data, dict):
+                    if json_data and isinstance(json_data, dict):
                             report["findings"]["is_profile_selling"] = "Máquina" in json_data.get("grid_conversion_capacity", "")
                             report["findings"]["sales_alignment"] = json_data.get("sales_bullet", "")
                             report["findings"]["authority_triggers"] = json_data.get("authority_verdict", "")
