@@ -662,59 +662,59 @@ export default function DigitalPredatorScanner() {
                     )}
 
                     {/* Tela 2: Performance Agent */}
-                    {activeTab === 'performance' && performanceSkill && (
+                    {activeTab === 'performance' && performanceSkill && performanceSkill.findings && Object.keys(performanceSkill.findings).length > 0 && (
                       <div className="liquid-glass p-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
                         <h3 className="text-lg font-bold mb-5 flex items-center justify-between border-b border-slate-800 pb-3">
                           <span className="flex items-center gap-2 text-slate-100"><Smartphone className="w-5 h-5 text-emerald-400" /> Interface & Performance P/ Conversão</span>
-                          {getScoreBadge(performanceSkill.score)}
+                          {getScoreBadge(performanceSkill.score ?? 0)}
                         </h3>
 
                         <div className="space-y-3 font-medium text-sm">
                           <div className="flex justify-between items-center bg-black/20 p-3.5 rounded-xl border border-white/5">
                             <span className="text-slate-300">Responsividade Mobile UI:</span>
-                            <span className={performanceSkill.findings.is_mobile_responsive_ui ? 'text-spring-green-400 font-bold' : 'text-red-400 font-bold'}>
-                              {performanceSkill.findings.is_mobile_responsive_ui ? 'OTIMIZADO' : 'QUEBRADO (NO VIEWPORT)'}
+                            <span className={performanceSkill.findings?.is_mobile_responsive_ui ? 'text-spring-green-400 font-bold' : 'text-red-400 font-bold'}>
+                              {performanceSkill.findings?.is_mobile_responsive_ui ? 'OTIMIZADO' : 'QUEBRADO (NO VIEWPORT)'}
                             </span>
                           </div>
                           <div className="flex justify-between items-center bg-black/20 p-3.5 rounded-xl border border-white/5">
                             <span className="text-slate-300">Tempo de Resposta Inicial (TTFB/Load):</span>
-                            <span className="text-indigo-300 font-bold">{performanceSkill.load_time_seconds}s</span>
+                            <span className="text-indigo-300 font-bold">{performanceSkill.load_time_seconds ?? 'N/A'}s</span>
                           </div>
                           <div className="flex justify-between items-center bg-black/20 p-3.5 rounded-xl border border-white/5">
                             <span className="text-slate-300">Gatilho de Busca Orgânica (Tag H1):</span>
-                            <span className={performanceSkill.findings.has_h1 ? 'text-spring-green-400' : 'text-yellow-400'}>
-                              {performanceSkill.findings.has_h1 ? 'OK' : 'FALHA DE HIERARQUIA'}
+                            <span className={performanceSkill.findings?.has_h1 ? 'text-spring-green-400' : 'text-yellow-400'}>
+                              {performanceSkill.findings?.has_h1 ? 'OK' : 'FALHA DE HIERARQUIA'}
                             </span>
                           </div>
                           <div className="flex justify-between items-center bg-black/20 p-3.5 rounded-xl border border-white/5">
                             <span className="text-slate-300">Convite de Clique (Meta Descrição):</span>
-                            <span className={performanceSkill.findings.has_meta_desc ? 'text-spring-green-400' : 'text-yellow-400'}>
-                              {performanceSkill.findings.has_meta_desc ? 'OK' : 'FALHA DE COPY'}
+                            <span className={performanceSkill.findings?.has_meta_desc ? 'text-spring-green-400' : 'text-yellow-400'}>
+                              {performanceSkill.findings?.has_meta_desc ? 'OK' : 'FALHA DE COPY'}
                             </span>
                           </div>
                           <div className="flex justify-between items-center bg-black/20 p-3.5 rounded-xl border border-white/5">
                             <span className="text-slate-300">Imagens Cegos P/ Google (S/ Alt):</span>
-                            <span className="text-orange-400">{performanceSkill.findings.images_without_alt} encontradas nulas</span>
+                            <span className="text-orange-400">{performanceSkill.findings?.images_without_alt ?? 0} encontradas nulas</span>
                           </div>
                           <div className="flex justify-between items-center bg-black/20 p-3.5 rounded-xl border border-white/5">
                             <span className="text-slate-300">Formulário de Contato:</span>
-                            <span className={performanceSkill.findings.has_contact_form ? 'text-spring-green-400 font-bold' : 'text-red-400 font-bold'}>
-                              {performanceSkill.findings.has_contact_form ? '✓ DETECTADO' : '✕ NÃO ENCONTRADO'}
+                            <span className={performanceSkill.findings?.has_contact_form ? 'text-spring-green-400 font-bold' : 'text-red-400 font-bold'}>
+                              {performanceSkill.findings?.has_contact_form ? '✓ DETECTADO' : '✕ NÃO ENCONTRADO'}
                             </span>
                           </div>
                           <div className="flex justify-between items-center bg-black/20 p-3.5 rounded-xl border border-white/5">
                             <span className="text-slate-300">Botões de Ação (CTAs):</span>
-                            <span className={performanceSkill.findings.cta_buttons_count > 0 ? 'text-spring-green-400 font-bold' : 'text-red-400 font-bold'}>
-                              {performanceSkill.findings.cta_buttons_count > 0 ? `${performanceSkill.findings.cta_buttons_count} encontrados` : '✕ NENHUM'}
+                            <span className={(performanceSkill.findings?.cta_buttons_count ?? 0) > 0 ? 'text-spring-green-400 font-bold' : 'text-red-400 font-bold'}>
+                              {(performanceSkill.findings?.cta_buttons_count ?? 0) > 0 ? `${performanceSkill.findings.cta_buttons_count} encontrados` : '✕ NENHUM'}
                             </span>
                           </div>
                           <div className="flex justify-between items-center bg-black/20 p-3.5 rounded-xl border border-white/5">
                             <span className="text-slate-300">Hub de Conteúdo (Blog):</span>
-                            <span className={performanceSkill.findings.has_blog ? 'text-spring-green-400 font-bold' : 'text-red-400 font-bold'}>
-                              {performanceSkill.findings.has_blog ? '✓ DETECTADO' : '✕ NÃO ENCONTRADO'}
+                            <span className={performanceSkill.findings?.has_blog ? 'text-spring-green-400 font-bold' : 'text-red-400 font-bold'}>
+                              {performanceSkill.findings?.has_blog ? '✓ DETECTADO' : '✕ NÃO ENCONTRADO'}
                             </span>
                           </div>
-                          {performanceSkill.findings.cta_examples?.length > 0 && (
+                          {performanceSkill.findings?.cta_examples?.length > 0 && (
                             <div className="bg-indigo-950/10 p-3.5 rounded-xl border border-indigo-500/10">
                               <p className="text-xs text-indigo-300 font-bold uppercase tracking-wider mb-1">Exemplos de CTAs:</p>
                               <p className="text-sm text-slate-300 font-mono">{performanceSkill.findings.cta_examples.join(' • ')}</p>
@@ -723,7 +723,7 @@ export default function DigitalPredatorScanner() {
                         </div>
 
                         {/* UI Clinical Analysis via LLM */}
-                        {performanceSkill.findings.ui_clinical_analysis && (
+                        {performanceSkill.findings?.ui_clinical_analysis && (
                           <div className="mt-4 mb-4 bg-brand-purple/5 border-l-2 border-brand-purple p-4 rounded-r-xl">
                             <h4 className="text-xs font-bold text-brand-purple mb-2 uppercase tracking-wider flex items-center gap-2">
                               <Activity className="w-4 h-4" /> Análise Clínica de UI (via IA)
@@ -732,7 +732,7 @@ export default function DigitalPredatorScanner() {
                           </div>
                         )}
 
-                        {performanceSkill.findings.blog_exploration_sample && (
+                        {performanceSkill.findings?.blog_exploration_sample && (
                           <div className="mt-4 mb-4 bg-blue-500/5 border-l-2 border-blue-500 p-4 rounded-r-xl">
                             <h4 className="text-xs font-bold text-blue-400 mb-2 uppercase tracking-wider flex items-center gap-2">
                               <FileText className="w-4 h-4" /> Amostra Tática P/ Blog (IA)
@@ -741,7 +741,7 @@ export default function DigitalPredatorScanner() {
                           </div>
                         )}
 
-                        {performanceSkill.critical_pains.length > 0 && (
+                        {(performanceSkill.critical_pains?.length ?? 0) > 0 && (
                           <div className="mt-5 bg-red-900/10 border-l-2 border-red-500 p-4 rounded-r-xl">
                             <h4 className="text-sm font-bold text-red-400 flex items-center gap-2 mb-2 uppercase tracking-wider text-xs">
                               <AlertTriangle className="w-4 h-4" /> Pontos Críticos de Atrito com o Cliente
@@ -754,7 +754,7 @@ export default function DigitalPredatorScanner() {
                           </div>
                         )}
 
-                        {performanceSkill.findings.evidences && performanceSkill.findings.evidences.length > 0 && (
+                        {performanceSkill.findings?.evidences && performanceSkill.findings.evidences.length > 0 && (
                           <div className="mt-4 bg-emerald-950/20 border-l-2 border-emerald-500 p-4 rounded-r-xl">
                             <h4 className="text-sm font-bold text-emerald-400 flex items-center gap-2 mb-2 uppercase tracking-wider text-xs">
                               <Smartphone className="w-4 h-4" /> Evidências Técnicas (Web Vitals / On-Page)
@@ -766,6 +766,20 @@ export default function DigitalPredatorScanner() {
                             </ul>
                           </div>
                         )}
+                      </div>
+                    )}
+                    {activeTab === 'performance' && performanceSkill && (!performanceSkill.findings || Object.keys(performanceSkill.findings).length === 0) && (
+                      <div className="liquid-glass p-8 text-center animate-in fade-in slide-in-from-bottom-4 duration-500">
+                        <Smartphone className="w-12 h-12 text-slate-600 mx-auto mb-4" />
+                        <p className="text-slate-400 text-lg font-semibold">Dados de UX/SEO não disponíveis</p>
+                        <p className="text-slate-500 text-sm mt-2">O agente de performance não conseguiu analisar a página (site pode estar offline ou inacessível).</p>
+                      </div>
+                    )}
+                    {activeTab === 'performance' && !performanceSkill && (
+                      <div className="liquid-glass p-8 text-center animate-in fade-in slide-in-from-bottom-4 duration-500">
+                        <Smartphone className="w-12 h-12 text-slate-600 mx-auto mb-4" />
+                        <p className="text-slate-400 text-lg font-semibold">Agente de UX/SEO não foi executado</p>
+                        <p className="text-slate-500 text-sm mt-2">Esta auditoria foi feita sem o motor de UX/SEO selecionado.</p>
                       </div>
                     )}
 

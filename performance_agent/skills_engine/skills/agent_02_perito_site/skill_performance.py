@@ -45,8 +45,9 @@ class PerformanceSkill(PredatorSkill):
 
         if not self.soup:
             return {
-                "name": "Audit Site Expert", 
+                "name": "Audit UX/SEO Agent (Site Expert)", 
                 "score": 0, 
+                "load_time_seconds": 0,
                 "critical_pains": ["Falha no Parser."],
                 "findings": {}
             }
