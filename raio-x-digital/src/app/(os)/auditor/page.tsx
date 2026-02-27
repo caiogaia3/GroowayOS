@@ -167,7 +167,7 @@ export default function DigitalPredatorScanner() {
   };
 
   const trackingSkill = reportData?.skills_results.find(s => s.name === "Tracking & Data Agent");
-  const performanceSkill = reportData?.skills_results.find(s => s.name === "Audit UX/SEO Agent");
+  const performanceSkill = reportData?.skills_results.find(s => s.name?.includes("Audit UX/SEO Agent"));
   const marketSkill = reportData?.skills_results.find(s => s.name === "Market Intelligence Agent");
   const socialSkill = reportData?.skills_results.find(s => s.name === "Social Media Agent (Apify + AI)");
   const cmoSkill = reportData?.skills_results.find(s => s.name === "Senior CMO Agent (Business & Sales)");
@@ -708,6 +708,12 @@ export default function DigitalPredatorScanner() {
                               {performanceSkill.findings.cta_buttons_count > 0 ? `${performanceSkill.findings.cta_buttons_count} encontrados` : '✕ NENHUM'}
                             </span>
                           </div>
+                          <div className="flex justify-between items-center bg-black/20 p-3.5 rounded-xl border border-white/5">
+                            <span className="text-slate-300">Hub de Conteúdo (Blog):</span>
+                            <span className={performanceSkill.findings.has_blog ? 'text-spring-green-400 font-bold' : 'text-red-400 font-bold'}>
+                              {performanceSkill.findings.has_blog ? '✓ DETECTADO' : '✕ NÃO ENCONTRADO'}
+                            </span>
+                          </div>
                           {performanceSkill.findings.cta_examples?.length > 0 && (
                             <div className="bg-indigo-950/10 p-3.5 rounded-xl border border-indigo-500/10">
                               <p className="text-xs text-indigo-300 font-bold uppercase tracking-wider mb-1">Exemplos de CTAs:</p>
@@ -723,6 +729,15 @@ export default function DigitalPredatorScanner() {
                               <Activity className="w-4 h-4" /> Análise Clínica de UI (via IA)
                             </h4>
                             <p className="text-sm text-slate-200 leading-relaxed font-medium italic">{performanceSkill.findings.ui_clinical_analysis}</p>
+                          </div>
+                        )}
+
+                        {performanceSkill.findings.blog_exploration_sample && (
+                          <div className="mt-4 mb-4 bg-blue-500/5 border-l-2 border-blue-500 p-4 rounded-r-xl">
+                            <h4 className="text-xs font-bold text-blue-400 mb-2 uppercase tracking-wider flex items-center gap-2">
+                              <FileText className="w-4 h-4" /> Amostra Tática P/ Blog (IA)
+                            </h4>
+                            <p className="text-sm text-slate-200 leading-relaxed font-medium italic">{performanceSkill.findings.blog_exploration_sample}</p>
                           </div>
                         )}
 

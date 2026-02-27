@@ -41,6 +41,7 @@ class PerformanceSkill(PredatorSkill):
         ui_analysis = ""
         evid = []
         boss_ammo = ""
+        blog_sample = ""
 
         if not self.soup:
             return {
@@ -132,6 +133,24 @@ class PerformanceSkill(PredatorSkill):
         else:
             b_neg.append("Scanner de Prova Social: Baixa autoridade percebida (Sem depoimentos).")
 
+        # =============================================
+        # 5.5 BLOG E MARKETING DE CONTEÚDO
+        # =============================================
+        has_blog = False
+        blog_keywords = ['blog', 'artigos', 'notícias', 'conteúdo', 'news', 'materiais']
+        for a_tag in self.soup.find_all('a', href=True):
+            href = a_tag['href'].lower()
+            text = a_tag.get_text(strip=True).lower()
+            if any(kw in href or kw in text for kw in blog_keywords):
+                has_blog = True
+                break
+        
+        if has_blog:
+            pts += 5
+            evid.append("Detectado possível Hub de Conteúdo (Blog/Artigos).")
+        else:
+            b_neg.append("Sem ecossistema de conteúdo detectado: A empresa restringe suas fontes de aquisição orgânica.")
+
         evid.append(f"Mapeamento de Eficácia do Site: {pts}% detectado.")
 
         # =============================================
@@ -142,17 +161,19 @@ class PerformanceSkill(PredatorSkill):
                 headings = [h.get_text(strip=True) for h in self.soup.find_all(['h1', 'h2', 'h3'])[:10]]
                 prompt = f"""
                 ARSENAL DO 'PERITO DE CONVERSÃO' (AGENTE 02). 
-                DADOS: {pts}% Efficacy | {round(lt, 2)}s Load | {hemorrhage}% ROI Hemorrhage.
+                DADOS: {pts}% Efficacy | {round(lt, 2)}s Load | {hemorrhage}% ROI Hemorrhage | Blog Mapeado: {has_blog}.
                 CONTEXTO: {headings}
                 
                 MISSÃO:
                 1. VEREDITO DO VASO SANITÁRIO DE ADS: O site queima dinheiro ou converte?
                 2. IMPOSTO DA LENTIDÃO: Como a demora técnica expulsa clientes.
+                3. TÁTICA DE CONTEÚDO: Elabore UMA FRASE muito curta e incisiva de copywriting sobre como eles poderiam explorar ou monetizar o Blog (ou a falta dele) para atrair leads para a equipe comercial. 
                 
                 JSON OUTPUT:
                 {{
                   "internal_boss_ammo": "Pitch letal",
                   "roi_verdict": "Veredito final",
+                  "blog_exploration_sample": "Frase sobre o blog",
                   "tactical_actions": ["Ação 1", "2"]
                 }}
                 """
@@ -160,7 +181,10 @@ class PerformanceSkill(PredatorSkill):
                 if res:
                     ui_analysis = res.get("roi_verdict", "")
                     boss_ammo = res.get("internal_boss_ammo", "")
+                    blog_sample = res.get("blog_exploration_sample", "")
                     b_rec.append(f"VEREDITO: {ui_analysis}")
+                    if blog_sample:
+                        b_rec.append(f"TÁTICA DE CONTEÚDO: {blog_sample}")
                     b_rec.extend(res.get("tactical_actions", []))
             except Exception as ui_err:
                 print(f"  [Site Agent] Falha na cognição Arsenal: {ui_err}")
@@ -178,7 +202,9 @@ class PerformanceSkill(PredatorSkill):
                 "cta_buttons_count": cta_count,
                 "has_pixels": has_px,
                 "has_social_proof": has_proof,
+                "has_blog": has_blog,
                 "ui_clinical_analysis": ui_analysis,
+                "blog_exploration_sample": blog_sample,
                 "conversion_hemorrhage_pct": hemorrhage,
                 "evidences": evid,
                 "internal_briefing_for_boss": boss_ammo

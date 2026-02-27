@@ -66,10 +66,12 @@ export function Sidebar() {
                     <Settings className="w-5 h-5 flex-shrink-0" />
                     <span className="font-medium text-sm hidden md:block truncate">Configuração</span>
                 </button>
-                <button title="Sair" className="w-full flex items-center justify-center md:justify-start gap-3 px-3 py-3 rounded-xl text-red-400 hover:bg-red-500/10 transition-colors">
-                    <LogOut className="w-5 h-5 flex-shrink-0" />
-                    <span className="font-medium text-sm hidden md:block truncate">Sair</span>
-                </button>
+                <form action="/auth/signout" method="post">
+                    <button type="submit" title="Sair" className="w-full flex items-center justify-center md:justify-start gap-3 px-3 py-3 rounded-xl text-red-400 hover:bg-red-500/10 transition-colors">
+                        <LogOut className="w-5 h-5 flex-shrink-0" />
+                        <span className="font-medium text-sm hidden md:block truncate">Sair</span>
+                    </button>
+                </form>
             </div>
         </aside>
     );

@@ -1,13 +1,18 @@
 import { Sidebar } from "@/core/components/Sidebar";
+import { createClient } from "@/lib/supabase/server";
+import { redirect } from "next/navigation";
 
-export default function OSLayout({
+export default async function OSLayout({
     children,
 }: {
     children: React.ReactNode;
 }) {
-    // Aqui no futuro vamos checar sessão do Supabase:
-    // const session = await getSession();
-    // if (!session) redirect('/login');
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+
+    if (!user) {
+        redirect('/login');
+    }
 
     return (
         <div className="min-h-screen bg-brand-dark flex">

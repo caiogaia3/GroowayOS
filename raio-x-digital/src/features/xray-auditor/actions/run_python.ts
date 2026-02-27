@@ -51,7 +51,7 @@ export async function runPythonOrchestrator(params: PredatorParams): Promise<Pyt
         const { stdout, stderr } = await execAsync(`"${venvPython}" "${mainScript}" '${jsonPayload}'`, {
             cwd: agentDir,
             maxBuffer: 1024 * 1024 * 10, // Aumenta limite de stdout para 10MB
-            timeout: 300000 // 5 minutos de timeout para suportar os agentes de IA
+            timeout: 900000 // 15 minutos de timeout para suportar os agentes de IA mais lentos
         });
 
         console.log("Python STDOUT:", stdout);
