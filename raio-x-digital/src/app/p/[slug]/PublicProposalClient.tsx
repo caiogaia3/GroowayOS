@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Check, ArrowRight, Download, Brain, Search, BarChart3, Clock, Rocket, Shield, Activity, FileText } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 import { updateProposalViewTime, markProposalPdfDownloaded } from "@/features/proposals/actions/get_public_proposal";
+import PublicHeader from "@/components/Branding/PublicHeader";
 
 interface Props {
     proposal: Proposal;
@@ -65,21 +66,26 @@ export default function PublicProposalClient({ proposal, content, viewId }: Prop
             <div className="absolute top-[-20%] left-[-10%] w-[120%] h-[120%] bg-white/[0.02] opacity-30 pointer-events-none mix-blend-overlay print:hidden" style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg viewBox=%220 0 200 200%22 xmlns=%22http://www.w3.org/2000/svg%22%3E%3Cfilter id=%22noiseFilter%22%3E%3CfeTurbulence type=%22fractalNoise%22 baseFrequency=%220.65%22 numOctaves=%223%22 stitchTiles=%22stitch%22/%3E%3C/filter%3E%3Crect width=%22100%25%22 height=%22100%25%22 filter=%22url(%23noiseFilter)%22/%3E%3C/svg%3E")' }} />
 
             {/* Public Header Branding */}
-            <nav className="fixed top-0 w-full z-50 bg-[#020617]/80 backdrop-blur-md border-b border-white/5 py-4 px-6 flex justify-between items-center print:static print:bg-white print:border-neutral-200">
+            <div className="print:hidden">
+                <PublicHeader />
+            </div>
+
+            <div className="hidden print:block py-4 border-b border-neutral-200">
                 <div className="flex items-center gap-3">
-                    <div className="relative w-8 h-8">
-                        <img src="/brand/logo-3d.png" alt="Grooway" className="object-contain" />
-                    </div>
+                    <img src="/brand/logo-flat.png" alt="Grooway" className="w-8 h-8 object-contain" />
                     <div className="flex flex-col leading-none">
-                        <span className="font-bold text-white print:text-black tracking-tight">GROOWAY</span>
+                        <span className="font-bold text-black tracking-tight">GROOWAY</span>
                         <span className="text-[8px] text-neutral-500 uppercase tracking-widest">Performance Digital</span>
                     </div>
                 </div>
+            </div>
+
+            <nav className="fixed top-0 right-0 z-[60] py-6 px-10 pointer-events-none print:hidden">
                 <button
-                    className="flex items-center gap-2 px-4 py-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-full transition-colors text-sm font-semibold print:hidden"
+                    className="pointer-events-auto flex items-center gap-2 px-4 py-2 bg-white/10 hover:bg-white/20 border border-white/20 rounded-full transition-colors text-sm font-semibold backdrop-blur-md"
                     onClick={handleDownloadPdf}
                 >
-                    <Download className="w-4 h-4" /> Salvar em PDF
+                    <Download className="w-4 h-4" /> PDF
                 </button>
             </nav>
 

@@ -135,9 +135,48 @@ export default function DigitalPredatorScanner() {
     setProgress(100);
   };
 
+  // --- Notificações e Sons ---
+  const playCompletionSound = () => {
+    try {
+      const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+      const oscillator = audioContext.createOscillator();
+      const gainNode = audioContext.createGain();
+
+      oscillator.type = 'sine';
+      oscillator.frequency.setValueAtTime(880, audioContext.currentTime); // Pitch alto e limpo
+      oscillator.frequency.exponentialRampToValueAtTime(440, audioContext.currentTime + 0.5);
+
+      gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
+      gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5);
+
+      oscillator.connect(gainNode);
+      gainNode.connect(audioContext.destination);
+
+      oscillator.start();
+      oscillator.stop(audioContext.currentTime + 0.5);
+    } catch (e) {
+      console.error("Erro ao reproduzir som:", e);
+    }
+  };
+
+  const notifyCompletion = () => {
+    if ("Notification" in window && Notification.permission === "granted") {
+      new Notification("Diagnóstico Concluído! 🚀", {
+        body: `A análise de ${url || companyName} foi finalizada com sucesso.`,
+        icon: "/favicon.ico"
+      });
+    }
+    playCompletionSound();
+  };
+
   const handleAnalyze = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!url) return;
+
+    // Solicita permissão de notificação no início
+    if ("Notification" in window && Notification.permission === "default") {
+      Notification.requestPermission();
+    }
 
     setAppState('analyzing');
     setProgress(0);
@@ -178,7 +217,10 @@ export default function DigitalPredatorScanner() {
           clearInterval(interval);
           setTimeout(() => {
             if (localError) setError(localError);
-            else if (localReport) setReportData(localReport);
+            else if (localReport) {
+              setReportData(localReport);
+              notifyCompletion();
+            }
             setAppState('result');
           }, 800);
         }
@@ -685,7 +727,10 @@ export default function DigitalPredatorScanner() {
                       </button>
 
                       <button
-                        onClick={() => setShowDiagnosticModal(true)}
+                        onClick={() => {
+                          const dossierId = reportData?.id || (reportData?.target_url ? btoa(reportData.target_url).slice(0, 12) : 'demo');
+                          window.open(`/d/${dossierId}`, '_blank');
+                        }}
                         className="px-4 py-2 text-xs bg-brand-purple/10 text-brand-purple hover:bg-brand-purple hover:text-white border border-brand-purple/30 rounded-full transition-all font-black flex items-center gap-2 uppercase tracking-wider"
                       >
                         <Target className="w-3.5 h-3.5" />
