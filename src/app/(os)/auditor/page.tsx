@@ -211,8 +211,8 @@ export default function AuditorPage() {
     };
 
     return (
-        <main className="min-h-screen bg-[#020617] text-slate-200 p-4 sm:p-8 font-sans">
-            <div className="max-w-7xl mx-auto space-y-8">
+        <>
+            <div className="max-w-7xl mx-auto space-y-12 pb-20">
                 <AuditorHeader onOpenHistory={() => setShowHistory(true)} />
 
                 {appState === 'input' && (
@@ -312,6 +312,6 @@ export default function AuditorPage() {
                 <DiagnosticPDF reportData={reportData} designSkill={reportData?.skills_results.find((s: any) => s.id === 'cmo')} />
                 <ProposalPDF reportData={reportData} designSkill={reportData?.skills_results.find((s: any) => s.id === 'cmo')} commercialPlan={commercialPlan} />
             </div>
-        </main>
+        </>
     );
 }

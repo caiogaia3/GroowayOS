@@ -1,4 +1,5 @@
 import { Sidebar } from "@/core/components/Sidebar";
+import ShellHeader from "@/core/components/ShellHeader";
 import { createClient } from "@/core/lib/supabase/server";
 import { redirect } from "next/navigation";
 
@@ -15,21 +16,24 @@ export default async function OSLayout({
     }
 
     return (
-        <div className="min-h-screen bg-brand-dark flex">
+        <div className="min-h-screen bg-[#020204] text-slate-100 flex selection:bg-purple-500/30 overflow-hidden">
+            {/* Global Mesh Background */}
+            <div className="fixed inset-0 liquid-mesh pointer-events-none -z-10" />
+
             {/* Navigation Layer */}
             <Sidebar />
 
-            {/* Main Content Area */}
-            <main className="flex-1 ml-20 md:ml-64 min-h-screen relative overflow-x-hidden transition-all duration-300">
-                {/* Global Glow background pattern for OS */}
-                <div className="absolute top-0 left-0 w-full h-[500px] bg-brand-purple/10 blur-[120px] rounded-full pointer-events-none -z-10 translate-y-[-50%] translate-x-[20%]"></div>
-                <div className="absolute top-20 right-0 w-[400px] h-[400px] bg-brand-cyan/10 blur-[100px] rounded-full pointer-events-none -z-10 translate-x-[30%]"></div>
+            <div className="flex-1 flex flex-col min-h-screen overflow-hidden pl-20 md:pl-64 transition-all duration-500">
+                <ShellHeader />
 
-                {/* Content Wrapper */}
-                <div className="p-4 md:p-8 pb-32 transition-all duration-300">
-                    {children}
-                </div>
-            </main>
+                {/* Scrollable Content Area */}
+                <main className="flex-1 overflow-y-auto custom-scrollbar relative">
+                    {/* Page Content */}
+                    <div className="p-8 md:p-12 pb-32">
+                        {children}
+                    </div>
+                </main>
+            </div>
         </div>
     );
 }

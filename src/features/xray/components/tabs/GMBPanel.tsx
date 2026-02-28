@@ -1,8 +1,9 @@
 "use client";
 import React from 'react';
-import { Target, Star, MessageSquare, AlertTriangle, ArrowRight } from 'lucide-react';
+import { Target, Star, MessageSquare, AlertTriangle, ArrowRight, Camera, MapPin } from 'lucide-react';
 import { GMBData } from '@/core/types/diagnostic';
 import { MetricCard } from '../MetricCard';
+import { motion } from 'framer-motion';
 
 interface GMBPanelProps {
     gmbSkill: {
@@ -22,93 +23,115 @@ interface GMBPanelProps {
 export const GMBPanel = ({ gmbSkill, getScoreBadge }: GMBPanelProps) => {
     if (!gmbSkill || !gmbSkill.findings) return null;
 
-    return (
-        <div className="bg-gradient-to-br from-emerald-900/30 to-black p-6 animate-in fade-in slide-in-from-bottom-4 duration-500 rounded-2xl border border-emerald-500/30 shadow-[0_0_30px_rgba(16,185,129,0.05)]">
-            <h3 className="text-xl font-bold mb-4 flex items-center justify-between">
-                <span className="flex items-center gap-2 text-slate-100"><Target className="w-5 h-5 text-emerald-400" /> Auditoria de Presença Local (Maps/GMB)</span>
-                {getScoreBadge(gmbSkill.score)}
-            </h3>
+    const { findings } = gmbSkill;
 
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+    return (
+        <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
+            {/* Header Section */}
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+                <div>
+                    <h3 className="text-2xl font-black text-white flex items-center gap-3 tracking-tighter">
+                        <MapPin className="w-6 h-6 text-emerald-400" />
+                        Auditoria de Presença Local (GMB)
+                    </h3>
+                    <p className="text-sm font-medium text-slate-400 mt-1">
+                        Diagnóstico de autoridade no Google Maps e eficácia da ficha comercial.
+                    </p>
+                </div>
+                {getScoreBadge(gmbSkill.score)}
+            </div>
+
+            {/* Core Local Metrics */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 <MetricCard
                     label="Autoridade"
-                    value={gmbSkill.findings.estimated_rating}
+                    value={findings.estimated_rating}
+                    icon={Star}
                     variant="success"
-                    tooltip="Nota média de estrelas."
+                    tooltip="Média de avaliação por estrelas detectada."
                 />
                 <MetricCard
                     label="Avaliações"
-                    value={gmbSkill.findings.reviews_volume}
-                    tooltip="Quantidade total de reviews."
+                    value={findings.reviews_volume}
+                    icon={MessageSquare}
+                    tooltip="Volume total de feedback de clientes."
                 />
                 <MetricCard
                     label="Acervo Fotos"
-                    value={gmbSkill.findings.photos_count || 0}
-                    variant={(gmbSkill.findings.photos_count || 0) >= 20 ? "success" : "warning"}
-                    tooltip="Quantidade de fotos."
+                    value={findings.photos_count || 0}
+                    icon={Camera}
+                    variant={(findings.photos_count || 0) >= 20 ? "success" : "warning"}
+                    tooltip="Quantidade de ativos visuais na ficha."
                 />
                 <MetricCard
                     label="Eficácia Ficha"
-                    value={`${gmbSkill.findings.profile_effectiveness_pct || 0}%`}
-                    status={(gmbSkill.findings.profile_effectiveness_pct || 0) >= 80}
-                    tooltip="Grooway Health Score."
+                    value={`${findings.profile_effectiveness_pct || 0}%`}
+                    status={(findings.profile_effectiveness_pct || 0) >= 80}
+                    tooltip="Nível de completude e otimização da ficha."
                 />
             </div>
 
-            {gmbSkill.findings.missing_for_100_pct && gmbSkill.findings.missing_for_100_pct.length > 0 && (
-                <div className="mb-6 bg-orange-950/20 border-l-4 border-orange-500 p-5 rounded-r-xl">
-                    <h4 className="text-sm font-bold text-orange-400 flex items-center gap-2 mb-3 uppercase tracking-wider">
-                        <AlertTriangle className="w-4 h-4" /> O Que Falta Para 100% de Eficácia
-                    </h4>
-                    <div className="space-y-2">
-                        {gmbSkill.findings.missing_for_100_pct.map((item: any, idx: number) => (
-                            <div key={`miss-${idx}`} className="flex items-start gap-3 p-2.5 bg-orange-950/20 rounded-lg">
-                                <span className="text-orange-500 font-bold mt-0.5">•</span>
-                                <div>
-                                    <span className="text-sm font-bold text-orange-200">{item.item}</span>
-                                    <p className="text-xs text-orange-300/60 mt-0.5">{item.description}</p>
-                                </div>
-                            </div>
-                        ))}
+            <div className="grid lg:grid-cols-2 gap-8">
+                {/* Missing Items - Glowing Amber Alert */}
+                {findings.missing_for_100_pct && findings.missing_for_100_pct.length > 0 && (
+                    <div className="liquid-card border-orange-500/10 p-8 relative overflow-hidden group">
+                        <div className="absolute top-0 left-0 w-1 h-full bg-orange-500/40 group-hover:bg-orange-500 transition-colors" />
+                        <h4 className="text-[10px] font-black text-orange-400 mb-6 uppercase tracking-[0.2em] flex items-center gap-2">
+                            <AlertTriangle className="w-4 h-4" /> Pendências Críticas (Eficácia)
+                        </h4>
+                        <div className="space-y-3">
+                            {findings.missing_for_100_pct.map((item, idx) => (
+                                <motion.div
+                                    key={idx}
+                                    whileHover={{ x: 4 }}
+                                    className="p-4 bg-orange-500/5 rounded-2xl border border-orange-500/10 flex flex-col gap-1"
+                                >
+                                    <span className="text-sm font-bold text-slate-100">{item.item}</span>
+                                    <span className="text-xs text-orange-300/60 font-medium">{item.description}</span>
+                                </motion.div>
+                            ))}
+                        </div>
                     </div>
-                </div>
-            )}
+                )}
 
-            {gmbSkill.findings.reviews_list_raw && gmbSkill.findings.reviews_list_raw.length > 0 && (
-                <div className="mb-6 bg-black/40 p-5 rounded-xl border border-zinc-800">
-                    <h4 className="flex items-center gap-2 text-sm font-bold text-white mb-4 uppercase tracking-wide border-b border-zinc-700 pb-2">
-                        <MessageSquare className="w-4 h-4 text-blue-400" /> Avaliações dos Clientes
-                    </h4>
-                    <div className="space-y-3 max-h-[300px] overflow-y-auto custom-scrollbar pr-2">
-                        {gmbSkill.findings.reviews_list_raw.map((review: any, idx: number) => (
-                            <div key={`rev-${idx}`} className="p-3 bg-zinc-900/50 rounded-lg border border-zinc-800/50">
-                                <div className="flex items-center gap-2 mb-2">
-                                    <div className="flex gap-0.5">
+                {/* Patient Reviews - Glass Scroll */}
+                {findings.reviews_list_raw && findings.reviews_list_raw.length > 0 && (
+                    <div className="liquid-card border-white/5 p-8 flex flex-col h-full">
+                        <h4 className="text-[10px] font-black text-blue-400 mb-6 uppercase tracking-[0.2em] flex items-center gap-2 border-b border-white/5 pb-4">
+                            <MessageSquare className="w-4 h-4" /> Amostra de Experiência
+                        </h4>
+                        <div className="space-y-4 max-h-[320px] overflow-y-auto no-scrollbar pr-2">
+                            {findings.reviews_list_raw.map((review, idx) => (
+                                <div key={idx} className="p-4 rounded-2xl bg-white/[0.02] border border-white/5">
+                                    <div className="flex gap-0.5 mb-2">
                                         {[1, 2, 3, 4, 5].map(star => (
-                                            <Star key={star} className={`w-3 h-3 ${star <= review.stars ? 'text-yellow-400 fill-yellow-400' : 'text-zinc-700'}`} />
+                                            <Star key={star} className={`w-3 h-3 ${star <= review.stars ? 'text-yellow-400 fill-yellow-400' : 'text-slate-700'}`} />
                                         ))}
                                     </div>
+                                    <p className="text-xs text-slate-300 leading-relaxed italic">&rdquo;{review.text || "Avaliação sem comentário"}&rdquo;</p>
                                 </div>
-                                <p className="text-sm text-slate-300 leading-relaxed">{review.text || "Avaliação sem texto"}</p>
+                            ))}
+                        </div>
+                    </div>
+                )}
+            </div>
+
+            {/* Optimization Path */}
+            {findings.optimization_tips && (
+                <div className="space-y-6">
+                    <h4 className="text-xs font-black text-emerald-400 uppercase tracking-widest px-2 flex items-center gap-2">
+                        <ArrowRight className="w-4 h-4" /> Plano de Otimização Local
+                    </h4>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {findings.optimization_tips.map((tip, idx) => (
+                            <div key={idx} className="glass-panel p-5 rounded-3xl border-emerald-500/10 hover:border-emerald-500/20 flex gap-5 items-start transition-all">
+                                <span className="w-8 h-8 rounded-xl bg-emerald-500/10 flex items-center justify-center text-emerald-400 font-black text-sm shrink-0 border border-emerald-500/20">
+                                    {idx + 1}
+                                </span>
+                                <p className="text-sm text-slate-300 font-medium leading-relaxed pt-1">{tip}</p>
                             </div>
                         ))}
                     </div>
-                </div>
-            )}
-
-            {gmbSkill.findings.optimization_tips && (
-                <div className="mb-6">
-                    <h4 className="flex items-center gap-2 text-sm font-bold text-emerald-400 mb-4 uppercase tracking-wide">
-                        <ArrowRight className="w-4 h-4" /> Ações Corretivas
-                    </h4>
-                    <ul className="space-y-2">
-                        {gmbSkill.findings.optimization_tips.map((tip: string, idx: number) => (
-                            <li key={idx} className="flex gap-3 text-sm text-zinc-300 items-start bg-black/20 p-3 rounded-lg border border-zinc-800/50">
-                                <span className="text-emerald-500 font-bold mt-0.5 min-w-5 text-center">{idx + 1}</span>
-                                <span>{tip}</span>
-                            </li>
-                        ))}
-                    </ul>
                 </div>
             )}
         </div>

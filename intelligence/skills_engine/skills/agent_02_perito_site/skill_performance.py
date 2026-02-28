@@ -9,10 +9,6 @@ class PerformanceSkill(PredatorSkill):
     def __init__(self, target_url):
         super().__init__(target_url)
         
-        from dotenv import load_dotenv
-        load_dotenv(dotenv_path=".env")
-        load_dotenv(dotenv_path="../raio-x-digital/.env.local")
-        
         self.api_key = os.getenv("GEMINI_API_KEY")
         self.openai_api_key = os.getenv("OPENAI_API_KEY")
 

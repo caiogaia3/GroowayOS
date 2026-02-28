@@ -1,7 +1,8 @@
 "use client";
 import React from 'react';
-import { Instagram, Activity, Shield, Target } from 'lucide-react';
+import { Instagram, Activity, Shield, Target, Link2, Heart, MessageCircle, Hash } from 'lucide-react';
 import { MetricCard } from '../MetricCard';
+import { motion } from 'framer-motion';
 
 interface SocialPanelProps {
     socialSkill: {
@@ -22,68 +23,95 @@ interface SocialPanelProps {
 export const SocialPanel = ({ socialSkill, getScoreBadge }: SocialPanelProps) => {
     if (!socialSkill) return null;
 
-    return (
-        <div className="liquid-glass p-6 animate-in fade-in slide-in-from-bottom-4 duration-500 bg-black/20 border-white/5 backdrop-blur-xl rounded-2xl">
-            <h3 className="text-lg font-bold mb-5 flex items-center justify-between border-b border-slate-800 pb-3">
-                <span className="flex items-center gap-2 text-slate-100"><Instagram className="w-5 h-5 text-fuchsia-400" /> Inteligência de Posicionamento Frio</span>
-                {getScoreBadge(socialSkill.score)}
-            </h3>
+    const { findings } = socialSkill;
 
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+    return (
+        <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
+            {/* Header Section */}
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+                <div>
+                    <h3 className="text-2xl font-black text-white flex items-center gap-3 tracking-tighter">
+                        <Instagram className="w-6 h-6 text-[#E1306C]" />
+                        Inteligência de Posicionamento Social
+                    </h3>
+                    <p className="text-sm font-medium text-slate-400 mt-1">
+                        Análise de presença digital, autoridade e motor de conversão social.
+                    </p>
+                </div>
+                {getScoreBadge(socialSkill.score)}
+            </div>
+
+            {/* Core Social Metrics */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 <MetricCard
-                    label="Base Endossada"
-                    value={socialSkill.findings.followers ?? '???'}
-                    tooltip="Volume de seguidores: Representa o alcance potencial direto e a prova social imediata do perfil."
+                    label="Seguidores"
+                    value={findings.followers ?? '???'}
+                    icon={Heart}
+                    tooltip="Base de seguidores total detectada no perfil."
                 />
                 <MetricCard
-                    label="Acervo Visual"
-                    value={socialSkill.findings.posts_count ?? '???'}
-                    tooltip="Total de publicações: Indica a consistência histórica e o volume de conteúdo disponível para o público."
+                    label="Publicações"
+                    value={findings.posts_count ?? '???'}
+                    icon={Hash}
+                    tooltip="Volume de posts históricos no acervo."
                 />
                 <MetricCard
                     label="Motor Inbound"
-                    value={socialSkill.findings.bio_has_link ? 'BIO COM LINK' : 'SEM ROTA DE FUGA'}
-                    status={socialSkill.findings.bio_has_link}
-                    tooltip="Presença de link na bio: O canal crítico para transformar seguidores em leads ou clientes."
+                    value={findings.bio_has_link ? 'BIO COM LINK' : 'SEM LINK'}
+                    status={findings.bio_has_link}
+                    icon={Link2}
+                    tooltip="Presença de link estratégico na Bio."
                 />
                 <MetricCard
                     label="Engajamento IA"
-                    value={socialSkill.findings.engagement_estimate ?? socialSkill.score}
+                    value={findings.engagement_estimate || "-"}
                     variant="purple"
-                    tooltip="Estimativa de engajamento da IA."
+                    icon={MessageCircle}
+                    tooltip="Nível de interação estimado por post."
                 />
             </div>
 
-            <div className="mt-4 mb-6 grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="p-4 bg-gradient-to-r from-brand-purple/10 to-transparent rounded-xl border border-brand-purple/20">
-                    <h4 className="text-xs font-black text-brand-purple mb-2 uppercase tracking-widest flex items-center gap-2">
+            {/* Narrative Analysis Panels */}
+            <div className="grid md:grid-cols-2 gap-8">
+                <div className="liquid-card border-white/5 p-8 relative group">
+                    <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-[#A855F7]/40 to-transparent" />
+                    <h4 className="text-[10px] font-black text-[#A855F7] mb-6 uppercase tracking-[0.2em] flex items-center gap-2">
                         <Activity className="w-4 h-4" /> Alinhamento Comercial
                     </h4>
-                    <p className="text-sm text-slate-300 leading-relaxed font-medium">
-                        {socialSkill.findings.sales_alignment || "Análise das legendas indisponível."}
+                    <p className="text-base text-white font-bold leading-relaxed tracking-tight group-hover:text-purple-100 transition-colors">
+                        &ldquo;{findings.sales_alignment || "Análise de conversão das legendas indisponível."}&rdquo;
                     </p>
                 </div>
-                <div className="p-4 bg-gradient-to-r from-blue-500/10 to-transparent rounded-xl border border-blue-500/20">
-                    <h4 className="text-xs font-black text-blue-400 mb-2 uppercase tracking-widest flex items-center gap-2">
-                        <Shield className="w-4 h-4" /> Autoridade (IA)
+
+                <div className="liquid-card border-white/5 p-8 relative group">
+                    <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-[#06B6D4]/40 to-transparent" />
+                    <h4 className="text-[10px] font-black text-[#06B6D4] mb-6 uppercase tracking-[0.2em] flex items-center gap-2">
+                        <Shield className="w-4 h-4" /> Gatilhos de Autoridade
                     </h4>
-                    <p className="text-sm text-slate-300 leading-relaxed font-medium">
-                        {socialSkill.findings.authority_triggers || "Análise de autoridade indisponível."}
+                    <p className="text-base text-white font-bold leading-relaxed tracking-tight group-hover:text-cyan-100 transition-colors">
+                        &ldquo;{findings.authority_triggers || "Análise de autoridade visual indisponível."}&rdquo;
                     </p>
                 </div>
             </div>
 
-            {(socialSkill.findings.content_ideas?.length ?? 0) > 0 && (
-                <div className="mt-4 mb-6 bg-gradient-to-r from-blue-900/20 to-transparent border border-blue-500/20 p-5 rounded-2xl">
-                    <h4 className="text-sm font-black text-blue-400 mb-4 uppercase tracking-wider flex items-center gap-2">
-                        <Target className="w-4 h-4" /> Plano Tático de Conteúdo
+            {/* Content Strategy - Batch 2 Grid Pattern */}
+            {(findings.content_ideas?.length ?? 0) > 0 && (
+                <div className="space-y-6">
+                    <h4 className="text-xs font-black text-slate-500 uppercase tracking-widest px-2 flex items-center gap-2">
+                        <Target className="w-4 h-4 text-cyan" /> Plano Tático de Conteúdo
                     </h4>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                        {socialSkill.findings.content_ideas?.map((idea: string, idx: number) => (
-                            <div key={idx} className="bg-black/40 p-3 rounded-xl border border-white/5 flex gap-3 items-start">
-                                <span className="text-blue-500 font-black text-lg leading-none mt-0.5">{idx + 1}.</span>
-                                <p className="text-slate-300 text-sm leading-relaxed">{idea}</p>
-                            </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {findings.content_ideas?.map((idea: string, idx: number) => (
+                            <motion.div
+                                key={idx}
+                                whileHover={{ x: 8 }}
+                                className="glass-panel p-5 rounded-3xl border-white/5 hover:border-cyan/20 flex gap-5 items-start transition-all"
+                            >
+                                <span className="w-8 h-8 rounded-xl bg-cyan/10 flex items-center justify-center text-cyan font-black text-sm shrink-0 border border-cyan/20">
+                                    {idx + 1}
+                                </span>
+                                <p className="text-sm text-slate-300 font-medium leading-relaxed pt-1">{idea}</p>
+                            </motion.div>
                         ))}
                     </div>
                 </div>

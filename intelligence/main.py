@@ -7,9 +7,15 @@ from tenacity import retry, stop_after_attempt, wait_exponential
 from dotenv import load_dotenv
 from supabase import create_client, Client
 
-# Carrega ambiente vital (Supabase, OpenAI, Gemini) ANTES de carregar qualquer módulo dependente delas.
-load_dotenv(dotenv_path=".env")
-load_dotenv(dotenv_path="../.env.local")
+# Carrega ambiente vital (Supabase, OpenAI, Gemini)
+load_dotenv() # Procura .env automaticamente no diretório atual
+load_dotenv(dotenv_path=".env") # Garante local
+load_dotenv(dotenv_path="../.env.local") # Fallback Next.js se rodar da raiz
+
+print(f"[*] Verificando chaves de API...")
+print(f"    GEMINI_API_KEY: {'[OK]' if os.getenv('GEMINI_API_KEY') else '[MISSING]'}")
+print(f"    OPENAI_API_KEY: {'[OK]' if os.getenv('OPENAI_API_KEY') else '[MISSING]'}")
+print(f"    APIFY_API_TOKEN: {'[OK]' if os.getenv('APIFY_API_TOKEN') else '[MISSING]'}")
 
 # Correção vital para macOS (LibreSSL / OpenSSL conflitos com Gemini/gRPC)
 os.environ["GRPC_DNS_RESOLVER"] = "native"
@@ -139,7 +145,9 @@ class PredatorOrchestrator:
         
         for skill in self.skills:
             try:
-                print(f"  -> Executando {skill.__class__.__name__}...")
+                skill_name = skill.__class__.__name__
+                print(f"[*] Chamando {skill_name}...")
+                start_skill = time.time()
                 
                 # Logic for strategy-aware agents
                 if isinstance(skill, (SeniorAnalystSkill, ValuePropositionSkill, CloserSkill, DesignTranslationSkill)):
@@ -157,7 +165,11 @@ class PredatorOrchestrator:
                     result = self._run_skill(skill, previous_results_context=previous_context)
                 else:
                     result = self._run_skill(skill)
-                    
+                
+                duration = time.time() - start_skill
+                has_data = "findings" in result and bool(result["findings"])
+                print(f"    [+] {skill_name} concluído em {duration:.2f}s. Dados encontrados: {'[SIM]' if has_data else '[NÃO]'}")
+                
                 master_report["skills_results"].append(result)
                 
                 # Injeta ID para o Frontend mapear os painéis
@@ -173,12 +185,11 @@ class PredatorOrchestrator:
                     "CloserSkill": "closer",
                     "DesignTranslationSkill": "design"
                 }
-                result["id"] = skill_id_map.get(skill.__class__.__name__, "unknown")
+                result["id"] = skill_id_map.get(skill_name, "unknown")
                 
                 # Dynamic delay to avoid 429
-                agent_name = skill.__class__.__name__
-                if "Skill" in agent_name:
-                    time.sleep(3) 
+                if "Skill" in skill_name:
+                    time.sleep(2) 
             except Exception as e:
                 print(f"  [!] Falha crítica no agente {skill.__class__.__name__}: {e}")
         # --- SYNC TO SUPABASE ---

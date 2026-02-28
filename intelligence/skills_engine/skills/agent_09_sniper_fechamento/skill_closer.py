@@ -15,10 +15,6 @@ class CloserSkill(PredatorSkill):
         super().__init__(target_url)
         self.params = params or {}
 
-        from dotenv import load_dotenv
-        load_dotenv(dotenv_path=".env")
-        load_dotenv(dotenv_path="../raio-x-digital/.env.local")
-
         self.api_key = os.getenv("GEMINI_API_KEY")
         self.openai_api_key = os.getenv("OPENAI_API_KEY")
 

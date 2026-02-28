@@ -18,15 +18,20 @@ export function Sidebar() {
     const pathname = usePathname();
 
     return (
-        <aside className="fixed top-0 left-0 h-screen w-20 md:w-64 bg-[rgba(10,10,20,0.65)] backdrop-blur-[30px] backdrop-saturate-[200%] border-r border-white/[0.08] flex flex-col z-50 transition-all duration-300">
-            {/* Brand */}
-            <div className="h-20 flex items-center justify-center md:justify-start md:px-6 border-b border-white/[0.06]">
-                <span className="hidden md:block text-white font-extrabold tracking-tighter text-xl">GROOWAY<span className="text-purple-400">OS</span></span>
-                <span className="md:hidden text-white font-extrabold text-xl">G</span>
+        <aside className="fixed top-0 left-0 h-screen w-20 md:w-64 glass-panel border-r border-white/5 flex flex-col z-50 transition-all duration-500">
+            {/* Brand - Logo Container */}
+            <div className="h-20 flex items-center justify-center md:justify-start md:px-8 border-b border-white/5">
+                <div className="w-10 h-10 bg-[#A855F7] rounded-2xl flex items-center justify-center shadow-[0_0_20px_rgba(168,85,247,0.4)] group cursor-pointer hover:scale-105 transition-transform">
+                    <Zap className="w-6 h-6 text-white fill-white" />
+                </div>
+                <div className="hidden md:flex flex-col ml-4">
+                    <span className="text-white font-black tracking-tighter text-lg leading-none uppercase">Grooway</span>
+                    <span className="text-[10px] text-[#A855F7] font-bold uppercase tracking-[0.2em] mt-1">Operating System</span>
+                </div>
             </div>
 
-            {/* Navigation */}
-            <nav className="flex-1 py-6 space-y-2 px-3 overflow-y-auto overflow-x-hidden custom-scrollbar">
+            {/* Navigation - Nodes */}
+            <nav className="flex-1 py-8 space-y-4 px-4 overflow-y-auto no-scrollbar">
                 {navItems.map((item) => {
                     const isFuture = item.href.startsWith('#');
                     const isActive = !isFuture && pathname.startsWith(item.href);
@@ -35,30 +40,33 @@ export function Sidebar() {
                         <Link
                             key={item.href}
                             href={item.href}
-                            className={`flex items-center gap-3 px-3 py-3 rounded-xl transition-all duration-200 group ${isActive
-                                ? "bg-purple-600/20 text-purple-400 shadow-[0_0_20px_rgba(109,40,217,0.15)]"
-                                : isFuture
-                                    ? "text-slate-600 hover:text-slate-400"
-                                    : "text-slate-400 hover:text-white hover:bg-white/[0.04]"
+                            className={`flex items-center justify-center md:justify-start gap-4 p-3.5 rounded-2xl transition-all duration-300 group relative ${isActive
+                                ? "sidebar-link-active"
+                                : "text-slate-500 hover:text-white hover:bg-white/5"
                                 }`}
                         >
-                            <item.icon className={`w-5 h-5 shrink-0 transition-colors ${isActive ? "text-purple-400" : isFuture ? "text-slate-600" : "text-slate-500 group-hover:text-white"}`} />
-                            <span className="hidden md:inline text-sm font-semibold">{item.label}</span>
-                            {isFuture && <span className="hidden md:inline ml-auto text-[8px] uppercase font-bold tracking-wider px-1.5 py-0.5 rounded bg-white/5 text-slate-500">Breve</span>}
+                            <item.icon className={`w-5 h-5 shrink-0 transition-all ${isActive ? "text-white glow-purple-neon" : "group-hover:scale-110"}`} />
+                            <span className={`hidden md:inline text-[11px] font-black uppercase tracking-widest ${isActive ? "text-white" : "text-slate-400 group-hover:text-white"}`}>
+                                {item.label}
+                            </span>
+
+                            {isActive && (
+                                <div className="absolute right-0 w-1 h-8 bg-purple-500 rounded-l-full shadow-[0_0_10px_#A855F7]" />
+                            )}
                         </Link>
                     );
                 })}
             </nav>
 
-            {/* Footer */}
-            <div className="p-3 border-t border-white/[0.06] space-y-1">
-                <Link href="#configuracoes" className="flex items-center gap-3 px-3 py-3 rounded-xl text-slate-500 hover:text-white hover:bg-white/[0.04] transition-all w-full">
-                    <Settings className="w-5 h-5 shrink-0" />
-                    <span className="hidden md:inline text-sm font-semibold">Configurações</span>
-                </Link>
-                <button className="flex items-center gap-3 px-3 py-3 rounded-xl text-slate-500 hover:text-red-400 hover:bg-red-500/10 transition-all w-full">
-                    <LogOut className="w-5 h-5 shrink-0" />
-                    <span className="hidden md:inline text-sm font-semibold">Sair</span>
+            {/* Footer Actions */}
+            <div className="p-4 border-t border-white/5 space-y-3">
+                <button className="w-full flex items-center justify-center md:justify-start gap-4 p-3.5 rounded-2xl text-slate-500 hover:text-white hover:bg-white/5 transition-all group">
+                    <Settings className="w-5 h-5 group-hover:rotate-45 transition-transform" />
+                    <span className="hidden md:inline text-[11px] font-black uppercase tracking-widest">Config</span>
+                </button>
+                <button className="w-full flex items-center justify-center md:justify-start gap-4 p-3.5 rounded-2xl text-slate-500 hover:text-red-400 hover:bg-red-500/10 transition-all">
+                    <LogOut className="w-5 h-5" />
+                    <span className="hidden md:inline text-[11px] font-black uppercase tracking-widest">Sair</span>
                 </button>
             </div>
         </aside>

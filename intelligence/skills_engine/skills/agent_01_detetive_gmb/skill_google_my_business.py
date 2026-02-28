@@ -9,9 +9,8 @@ class GMBAuditorSkill(PredatorSkill):
         super().__init__(target_url)
         self.params = params or {}
         
-        from dotenv import load_dotenv
-        load_dotenv(dotenv_path=".env")
-        load_dotenv(dotenv_path="../raio-x-digital/.env.local")
+        super().__init__(target_url)
+        self.params = params or {}
         
         self.api_key = os.getenv("GEMINI_API_KEY")
         self.openai_api_key = os.getenv("OPENAI_API_KEY")
@@ -92,7 +91,15 @@ class GMBAuditorSkill(PredatorSkill):
             run = apify_client.actor("compass/crawler-google-places").call(run_input=run_input, timeout_secs=55)
             
             if run and run.get("defaultDatasetId"):
-                for item in apify_client.dataset(run["defaultDatasetId"]).iterate_items():
+                items = list(apify_client.dataset(run["defaultDatasetId"]).iterate_items())
+                print(f"    [GMB Skill] Encontrados {len(items)} itens no dataset.")
+                
+                for item in items:
+                    place_name = item.get('title') or item.get('name')
+                    if not place_name:
+                        continue
+                        
+                    print(f"    [GMB Skill] Analisando local: {place_name}")
                     img_val = item.get('imageCount') or item.get('totalPhotos') or 0
                     p_count = len(img_val) if isinstance(img_val, list) else int(img_val or 0)
 
