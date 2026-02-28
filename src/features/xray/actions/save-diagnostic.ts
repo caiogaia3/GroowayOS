@@ -22,21 +22,54 @@ export async function saveDiagnosticAction(params: SaveDiagnosticInput) {
             status = 'complete'
         } = validated;
         // 1. Create or Update Lead
-        const { data: lead, error: leadError } = await supabase
+        let lead;
+        const { data: existingLead, error: checkError } = await supabase
             .from('leads')
-            .upsert({
-                company_name: companyName,
-                target_url: targetUrl,
-                city,
-                instagram,
-                status: 'analyzed'
-            }, { onConflict: 'target_url' })
             .select()
-            .single();
+            .eq('target_url', targetUrl)
+            .maybeSingle();
 
-        if (leadError) {
-            console.error('Error saving lead:', leadError);
-            throw new Error('Falha ao salvar lead.');
+        if (checkError) {
+            console.error('Error checking lead:', checkError);
+            throw new Error(`Erro ao checar lead: ${checkError.message}`);
+        }
+
+        if (existingLead) {
+            const { data: updatedLead, error: updateError } = await supabase
+                .from('leads')
+                .update({
+                    company_name: companyName,
+                    city,
+                    instagram,
+                    status: 'analyzed'
+                })
+                .eq('id', existingLead.id)
+                .select()
+                .single();
+
+            if (updateError) {
+                console.error('Error updating lead:', updateError);
+                throw new Error(`Falha ao atualizar lead: ${updateError.message}`);
+            }
+            lead = updatedLead;
+        } else {
+            const { data: newLead, error: insertError } = await supabase
+                .from('leads')
+                .insert({
+                    company_name: companyName,
+                    target_url: targetUrl,
+                    city,
+                    instagram,
+                    status: 'analyzed'
+                })
+                .select()
+                .single();
+
+            if (insertError) {
+                console.error('Error inserting lead:', insertError);
+                throw new Error(`Falha ao criar lead: ${insertError.message}`);
+            }
+            lead = newLead;
         }
 
         // 2. Create Diagnostic Record with 'complete' status since we are saving the result

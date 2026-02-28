@@ -1,10 +1,17 @@
 import { z } from 'zod';
 
+const tolerantUrl = z.string().transform(val => {
+    if (!val.startsWith('http://') && !val.startsWith('https://')) {
+        return `https://${val}`;
+    }
+    return val;
+}).pipe(z.string().url("URL inválida"));
+
 /**
  * Schema for triggering the Python analysis
  */
 export const TriggerAnalysisSchema = z.object({
-    url: z.string().url("URL inválida"),
+    url: tolerantUrl,
     companyName: z.string().min(2, "Nome da empresa muito curto"),
     diagnosticId: z.string().uuid("ID de diagnóstico inválido"),
     selectedAgents: z.array(z.string()).min(1, "Selecione pelo menos um agente"),
@@ -17,7 +24,7 @@ export const TriggerAnalysisSchema = z.object({
  */
 export const SaveDiagnosticSchema = z.object({
     companyName: z.string(),
-    targetUrl: z.string().url(),
+    targetUrl: tolerantUrl,
     city: z.string().optional(),
     instagram: z.string().optional(),
     reportData: z.any().optional(),

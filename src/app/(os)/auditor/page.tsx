@@ -134,7 +134,7 @@ export default function AuditorPage() {
             }
         } else {
             setAppState('input');
-            alert('Falha ao registrar lead.');
+            alert(`Falha ao registrar lead: ${res.error || 'Erro desconhecido'}`);
         }
     };
 
