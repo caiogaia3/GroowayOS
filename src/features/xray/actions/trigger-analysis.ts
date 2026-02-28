@@ -33,19 +33,24 @@ export async function triggerAnalysisAction(params: TriggerAnalysisInput) {
 
         // --- HACK EXTREMO PARA O NIXPACKS / EASYPANEL ---
         // O Easypanel deleta qualquer coisa que instalamos na máquina de Build
-        // Então instalamos em tempo real na máquina efêmera toda vez que o botão é clicado!
+        // Então instalamos em tempo real na máquina efêmera.
+        // Otimização: verificamos se já existe para não re-instalar em todo clique.
         try {
-            console.log(`[*] Instalando dependências de IA "On-The-Fly" no container ativo...`);
-            const onTheFlyPip = spawnSync('python3', [
-                '-m', 'pip', 'install', '-r', 'requirements.txt', '--break-system-packages'
-            ], {
-                cwd: pythonRoot,
-                encoding: 'utf-8',
-                stdio: 'inherit' // Permite ver o output nos logs
-            });
-            console.log(`[*] Pip on-the-fly terminou.`);
+            const checkPkg = spawnSync('python3', ['-c', 'import google.genai'], { cwd: pythonRoot });
+            if (checkPkg.status !== 0) {
+                console.log(`[*] Dependências não encontradas. Instalando "On-The-Fly" no container...`);
+                spawnSync('python3', [
+                    '-m', 'pip', 'install', '-r', 'requirements.txt', '--break-system-packages'
+                ], {
+                    cwd: pythonRoot,
+                    encoding: 'utf-8',
+                    stdio: 'inherit'
+                });
+            } else {
+                console.log(`[V] Dependências já instaladas. Pulando PIP.`);
+            }
         } catch (e) {
-            console.log(`[!] Falha no Hack do PIP On-The-Fly:`, e);
+            console.log(`[!] Falha ao verificar ou instalar PIP:`, e);
         }
         // ------------------------------------------------
 

@@ -28,17 +28,18 @@ export const TABS: Tab[] = [
 
 export function ResultsTabs({ activeTab, onTabChange }: ResultsTabsProps) {
     return (
-        <div className="flex overflow-x-auto gap-2 p-1 bg-black/40 border border-white/5 rounded-2xl no-scrollbar mb-6">
+        <div className="flex overflow-x-auto gap-3 p-2 bg-white/5 border border-white/10 rounded-2xl no-scrollbar mb-8 backdrop-blur-md">
             {TABS.map((tab) => (
                 <button
                     key={tab.id}
                     onClick={() => onTabChange(tab.id)}
-                    className={`flex items-center gap-2 px-5 py-3 rounded-xl text-xs font-bold transition-all whitespace-nowrap ${activeTab === tab.id
-                            ? 'bg-brand-purple text-white shadow-lg'
-                            : 'text-slate-400 hover:text-white hover:bg-white/5'
+                    className={`flex items-center gap-3 px-6 py-3.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap border ${activeTab === tab.id
+                        ? 'bg-[#A855F7] text-white border-[#A855F7]/30 shadow-[0_0_20px_rgba(168,85,247,0.3)]'
+                        : 'text-slate-500 border-transparent hover:text-white hover:bg-white/5'
                         }`}
                 >
-                    <tab.icon className="w-4 h-4" /> {tab.label}
+                    <tab.icon className={`w-4 h-4 transition-colors ${activeTab === tab.id ? 'text-white' : 'text-slate-600 group-hover:text-white'}`} />
+                    {tab.label}
                 </button>
             ))}
         </div>

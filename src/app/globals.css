@@ -1,11 +1,14 @@
 @import "tailwindcss";
+@import "./design-system.css";
 
 @theme {
   --font-sans: var(--font-inter), "Inter", sans-serif;
 
   --color-brand-purple: #6D28D9;
+  --color-brand-purple-v2: #A855F7;
   --color-brand-cyan: #06B6D4;
   --color-brand-dark: #020617;
+  --color-brand-dark-v2: #020204;
 
   --color-spring-green-400: #4ade80;
 
@@ -235,8 +238,8 @@ body {
   }
 
   /* Hidden elements in PDF */
-  nav, 
-  footer, 
+  nav,
+  footer,
   button,
   .no-print,
   .floating_btn,

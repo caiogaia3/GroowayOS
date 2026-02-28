@@ -211,77 +211,75 @@ export default function AuditorPage() {
     };
 
     return (
-        <main className="min-h-screen bg-[#020617] text-slate-200 p-4 sm:p-8 font-sans">
-            <div className="max-w-7xl mx-auto space-y-8">
-                <AuditorHeader onOpenHistory={() => setShowHistory(true)} />
+        <div className="space-y-10">
+            <AuditorHeader onOpenHistory={() => setShowHistory(true)} />
 
-                {appState === 'input' && (
-                    <AuditorForm
-                        url={url} setUrl={setUrl}
-                        companyName={companyName} setCompanyName={setCompanyName}
-                        city={city} setCity={setCity}
-                        instagram={instagram} setInstagram={setInstagram}
-                        selectedAgents={selectedAgents} setSelectedAgents={setSelectedAgents}
-                        availableAgents={availableAgents}
-                        appState={appState}
-                        onSubmit={handleAnalyze}
-                    />
-                )}
+            {appState === 'input' && (
+                <AuditorForm
+                    url={url} setUrl={setUrl}
+                    companyName={companyName} setCompanyName={setCompanyName}
+                    city={city} setCity={setCity}
+                    instagram={instagram} setInstagram={setInstagram}
+                    selectedAgents={selectedAgents} setSelectedAgents={setSelectedAgents}
+                    availableAgents={availableAgents}
+                    appState={appState}
+                    onSubmit={handleAnalyze}
+                />
+            )}
 
-                {appState === 'analyzing' && <ScanningProgress progress={progress} analysisText={statusMessage} />}
+            {appState === 'analyzing' && <ScanningProgress progress={progress} analysisText={statusMessage} />}
 
-                <AnimatePresence>
-                    {appState === 'result' && (
-                        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-6">
-                            <ResultsSummary
-                                score={reportData?.final_score || 85}
-                                companyName={companyName}
-                                onShareReport={handleShareReport}
-                                onGenerateProposal={handleGenerateProposal}
-                                onOpenPDF={() => { }}
-                                isSaving={isSaving}
-                                shareLink={shareLink}
-                            />
+            <AnimatePresence>
+                {appState === 'result' && (
+                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-6">
+                        <ResultsSummary
+                            score={reportData?.final_score || 85}
+                            companyName={companyName}
+                            onShareReport={handleShareReport}
+                            onGenerateProposal={handleGenerateProposal}
+                            onOpenPDF={() => { }}
+                            isSaving={isSaving}
+                            shareLink={shareLink}
+                        />
 
-                            <ResultsTabs activeTab={activeTab} onTabChange={setActiveTab} />
+                        <ResultsTabs activeTab={activeTab} onTabChange={setActiveTab} />
 
-                            <div className="min-h-[500px]">
-                                {activeTab === 'cmo' && <CMOPanel cmoSkill={reportData?.skills_results.find((s: any) => s.id === 'cmo')} getScoreBadge={getScoreBadge} />}
-                                {activeTab === 'tracking' && <TrackingPanel trackingSkill={reportData?.skills_results.find((s: any) => s.id === 'tracking')} getScoreBadge={getScoreBadge} />}
-                                {activeTab === 'performance' && <PerformancePanel performanceSkill={reportData?.skills_results.find((s: any) => s.id === 'performance')} getScoreBadge={getScoreBadge} />}
-                                {activeTab === 'market' && <MarketPanel marketSkill={reportData?.skills_results.find((s: any) => s.id === 'market')} />}
-                                {activeTab === 'social' && <SocialPanel socialSkill={reportData?.skills_results.find((s: any) => s.id === 'social')} getScoreBadge={getScoreBadge} />}
-                                {activeTab === 'gmb' && <GMBPanel gmbSkill={reportData?.skills_results.find((s: any) => s.id === 'gmb')} getScoreBadge={getScoreBadge} />}
-                                {activeTab === 'keywords' && <KeywordsPanel keywordSkill={reportData?.skills_results.find((s: any) => s.id === 'keywords')} getScoreBadge={getScoreBadge} />}
-                                {activeTab === 'commercial' && (
-                                    <CommercialPlanPanel
-                                        commercialPlan={commercialPlan}
-                                        isGeneratingProposal={isSaving}
-                                        handleGenerateProposal={handleGenerateProposal}
-                                    />
-                                )}
-                                {proposalShareLink && (
-                                    <div className="mt-4 p-4 bg-indigo-500/10 border border-indigo-500/20 rounded-2xl flex items-center justify-between">
-                                        <div className="text-xs font-bold text-indigo-300">LINK DA PROPOSTA ATIVO:</div>
-                                        <div className="flex gap-2">
-                                            <code className="text-[10px] bg-black/40 px-3 py-1 rounded-md text-indigo-400 border border-indigo-500/10 truncate max-w-[200px]">{proposalShareLink}</code>
-                                            <button
-                                                onClick={() => {
-                                                    navigator.clipboard.writeText(proposalShareLink);
-                                                    alert('Copiado!');
-                                                }}
-                                                className="text-[10px] font-black uppercase text-indigo-300 hover:text-white"
-                                            >
-                                                Copiar
-                                            </button>
-                                        </div>
+                        <div className="min-h-[500px]">
+                            {activeTab === 'cmo' && <CMOPanel cmoSkill={reportData?.skills_results.find((s: any) => s.id === 'cmo')} getScoreBadge={getScoreBadge} />}
+                            {activeTab === 'tracking' && <TrackingPanel trackingSkill={reportData?.skills_results.find((s: any) => s.id === 'tracking')} getScoreBadge={getScoreBadge} />}
+                            {activeTab === 'performance' && <PerformancePanel performanceSkill={reportData?.skills_results.find((s: any) => s.id === 'performance')} getScoreBadge={getScoreBadge} />}
+                            {activeTab === 'market' && <MarketPanel marketSkill={reportData?.skills_results.find((s: any) => s.id === 'market')} />}
+                            {activeTab === 'social' && <SocialPanel socialSkill={reportData?.skills_results.find((s: any) => s.id === 'social')} getScoreBadge={getScoreBadge} />}
+                            {activeTab === 'gmb' && <GMBPanel gmbSkill={reportData?.skills_results.find((s: any) => s.id === 'gmb')} getScoreBadge={getScoreBadge} />}
+                            {activeTab === 'keywords' && <KeywordsPanel keywordSkill={reportData?.skills_results.find((s: any) => s.id === 'keywords')} getScoreBadge={getScoreBadge} />}
+                            {activeTab === 'commercial' && (
+                                <CommercialPlanPanel
+                                    commercialPlan={commercialPlan}
+                                    isGeneratingProposal={isSaving}
+                                    handleGenerateProposal={handleGenerateProposal}
+                                />
+                            )}
+                            {proposalShareLink && (
+                                <div className="mt-4 p-4 bg-indigo-500/10 border border-indigo-500/20 rounded-2xl flex items-center justify-between">
+                                    <div className="text-xs font-bold text-indigo-300">LINK DA PROPOSTA ATIVO:</div>
+                                    <div className="flex gap-2">
+                                        <code className="text-[10px] bg-black/40 px-3 py-1 rounded-md text-indigo-400 border border-indigo-500/10 truncate max-w-[200px]">{proposalShareLink}</code>
+                                        <button
+                                            onClick={() => {
+                                                navigator.clipboard.writeText(proposalShareLink);
+                                                alert('Copiado!');
+                                            }}
+                                            className="text-[10px] font-black uppercase text-indigo-300 hover:text-white"
+                                        >
+                                            Copiar
+                                        </button>
                                     </div>
-                                )}
-                            </div>
-                        </motion.div>
-                    )}
-                </AnimatePresence>
-            </div>
+                                </div>
+                            )}
+                        </div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
 
             <DiagnosticModal
                 isOpen={showDiagnosticModal}
@@ -312,6 +310,6 @@ export default function AuditorPage() {
                 <DiagnosticPDF reportData={reportData} designSkill={reportData?.skills_results.find((s: any) => s.id === 'cmo')} />
                 <ProposalPDF reportData={reportData} designSkill={reportData?.skills_results.find((s: any) => s.id === 'cmo')} commercialPlan={commercialPlan} />
             </div>
-        </main>
+        </div>
     );
 }

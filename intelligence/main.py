@@ -3,6 +3,7 @@ import time
 import json
 import requests
 import os
+from typing import Dict, Any
 from tenacity import retry, stop_after_attempt, wait_exponential
 from dotenv import load_dotenv
 from supabase import create_client, Client
@@ -135,39 +136,66 @@ class PredatorOrchestrator:
             "skills_results": []
         }
 
-        print(f"[*] Lançando {len(self.skills)} Agentes sequencialmente (Prevenção Antifraude API)...")
+        print(f"[*] Fase 1: Batida Policial (Coleta Paralela de Dados)...")
+        start_parallel = time.time()
         
-        for skill in self.skills:
+        # Separamos em Coletores (Paralelos) e Estrategistas (Sequenciais)
+        collector_skills = [s for s in self.skills if not isinstance(s, (SeniorAnalystSkill, ValuePropositionSkill, CloserSkill, DesignTranslationSkill))]
+        strategist_skills = [s for s in self.skills if isinstance(s, (SeniorAnalystSkill, ValuePropositionSkill, CloserSkill, DesignTranslationSkill))]
+
+        # --- EXECUÇÃO PARALELA (COLETORES) ---
+        with ThreadPoolExecutor(max_workers=len(collector_skills)) as executor:
+            # Mapeamos o executor para as skills
+            future_to_skill = {executor.submit(self._run_skill, s): s for s in collector_skills}
+            
+            for future in future_to_skill:
+                skill = future_to_skill[future]
+                try:
+                    result = future.result()
+                    master_report["skills_results"].append(result)
+                    
+                    # Injeta ID para o Frontend
+                    skill_id_map = {
+                        "TrackingSkill": "tracking",
+                        "PerformanceSkill": "performance",
+                        "MarketResearchSkill": "market",
+                        "SocialMediaResearchSkill": "social",
+                        "GMBAuditorSkill": "gmb",
+                        "KeywordResearchSkill": "keywords"
+                    }
+                    result["id"] = skill_id_map.get(skill.__class__.__name__, "unknown")
+                    print(f"  [+] {skill.__class__.__name__} finalizado.")
+                except Exception as e:
+                    print(f"  [!] Falha no coletor {skill.__class__.__name__}: {e}")
+
+        parallel_duration = time.time() - start_parallel
+        print(f"[*] Fase 1 concluída em {parallel_duration:.2f}s.")
+
+        # --- EXECUÇÃO SEQUENCIAL (ESTRATEGISTAS) ---
+        print(f"[*] Fase 2: Tribunal e Estratégia (Consolidação de Inteligência)...")
+        
+        for skill in strategist_skills:
             try:
                 print(f"  -> Executando {skill.__class__.__name__}...")
                 
-                # Logic for strategy-aware agents
-                if isinstance(skill, (SeniorAnalystSkill, ValuePropositionSkill, CloserSkill, DesignTranslationSkill)):
-                    previous_context = {}
-                    for r in master_report["skills_results"]:
-                        agent_name = r.get("name", "unknown")
-                        previous_context[agent_name] = {
-                            "findings": r.get("findings", {}),
-                            "boss_briefing": r.get("boss_briefing", {}),
-                            "score": r.get("score", 0),
-                            "critical_pains": r.get("critical_pains", []),
-                            "internal_briefing_for_boss": r.get("internal_briefing_for_boss", ""),
-                            "internal_briefing_for_alchemist": r.get("internal_briefing_for_alchemist", "")
-                        }
-                    result = self._run_skill(skill, previous_results_context=previous_context)
-                else:
-                    result = self._run_skill(skill)
-                    
+                # Prepara contexto acumulado para os estrategistas
+                previous_context = {}
+                for r in master_report["skills_results"]:
+                    agent_name = r.get("name", "unknown")
+                    previous_context[agent_name] = {
+                        "findings": r.get("findings", {}),
+                        "boss_briefing": r.get("boss_briefing", {}),
+                        "score": r.get("score", 0),
+                        "critical_pains": r.get("critical_pains", []),
+                        "internal_briefing_for_boss": r.get("internal_briefing_for_boss", ""),
+                        "internal_briefing_for_alchemist": r.get("internal_briefing_for_alchemist", "")
+                    }
+                
+                result = self._run_skill(skill, previous_results_context=previous_context)
                 master_report["skills_results"].append(result)
                 
-                # Injeta ID para o Frontend mapear os painéis
+                # Injeta ID para o Frontend
                 skill_id_map = {
-                    "TrackingSkill": "tracking",
-                    "PerformanceSkill": "performance",
-                    "MarketResearchSkill": "market",
-                    "SocialMediaResearchSkill": "social",
-                    "GMBAuditorSkill": "gmb",
-                    "KeywordResearchSkill": "keywords",
                     "SeniorAnalystSkill": "cmo",
                     "ValuePropositionSkill": "alchemist",
                     "CloserSkill": "closer",
@@ -175,12 +203,8 @@ class PredatorOrchestrator:
                 }
                 result["id"] = skill_id_map.get(skill.__class__.__name__, "unknown")
                 
-                # Dynamic delay to avoid 429
-                agent_name = skill.__class__.__name__
-                if "Skill" in agent_name:
-                    time.sleep(3) 
             except Exception as e:
-                print(f"  [!] Falha crítica no agente {skill.__class__.__name__}: {e}")
+                print(f"  [!] Falha estratégica no agente {skill.__class__.__name__}: {e}")
         # --- SYNC TO SUPABASE ---
         diagnostic_id = self.params.get("diagnosticId")
         if diagnostic_id:
@@ -202,10 +226,10 @@ class PredatorOrchestrator:
                 for res in master_report.get("skills_results", []):
                     score_val = res.get("score")
                     if isinstance(score_val, (int, float)) and score_val > 0:
-                        total_sc += float(score_val)
-                        sc_count += 1
+                        total_sc = total_sc + float(score_val)
+                        sc_count = sc_count + 1
                 
-                final_score = int(total_sc / sc_count) if sc_count > 0 else 0
+                final_score: int = int(total_sc / sc_count) if sc_count > 0 else 0
                 
                 supabase.table("diagnostics").update({
                     "report_data": master_report,
