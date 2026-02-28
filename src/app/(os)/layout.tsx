@@ -1,5 +1,5 @@
 import { Sidebar } from "@/core/components/Sidebar";
-import { createClient } from "@/lib/supabase/server";
+import { createClient } from "@/core/lib/supabase/server";
 import { redirect } from "next/navigation";
 
 export default async function OSLayout({

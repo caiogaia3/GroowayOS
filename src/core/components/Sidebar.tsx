@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, ScanSearch, Users, FileText, LogOut } from "lucide-react";
+import { LayoutDashboard, ScanSearch, Users, FileText, LogOut, Zap } from "lucide-react";
 
 const navSections = [
     {
@@ -13,10 +13,18 @@ const navSections = [
         ]
     },
     {
-        title: "Hub",
+        title: "Principal",
         items: [
+            { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
+            { href: "/leads", label: "Leads", icon: Users },
+        ]
+    },
+    {
+        title: "HUB",
+        items: [
+            { href: "/hub", label: "Hub Central", icon: Zap },
             { href: "/auditor", label: "Auditor", icon: ScanSearch },
-            { href: "/proposals/catalog", label: "Propostas", icon: FileText },
+            { href: "/proposals/new", label: "Gerar Proposta", icon: FileText },
         ]
     }
 ];

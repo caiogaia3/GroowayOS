@@ -1,6 +1,6 @@
 "use server"
 
-import { createClient } from "@/lib/supabase/server";
+import { createClient } from "@/core/lib/supabase/server";
 import { revalidatePath } from "next/cache";
 
 export async function renewProposal(proposalId: string, days: number = 7) {

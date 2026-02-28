@@ -1,4 +1,4 @@
-import { createClient } from "@/lib/supabase/server";
+import { createClient } from "@/core/lib/supabase/server";
 import { Proposal } from "@/features/proposals/lib/types";
 import Link from "next/link";
 import { ArrowLeft, BookmarkPlus } from "lucide-react";

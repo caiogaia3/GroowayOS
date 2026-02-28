@@ -1,6 +1,6 @@
 "use server"
 
-import { createClient } from "@/lib/supabase/server";
+import { createClient } from "@/core/lib/supabase/server";
 import { Proposal, ProposalVersion } from "@/features/proposals/lib/types";
 import { createNotification } from "@/features/proposals/actions/notification_actions";
 

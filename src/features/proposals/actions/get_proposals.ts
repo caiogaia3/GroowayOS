@@ -1,6 +1,6 @@
 "use server"
 
-import { createClient } from "@/lib/supabase/server";
+import { createClient } from "@/core/lib/supabase/server";
 import { Proposal } from "../lib/types";
 
 export async function getProposals(): Promise<Proposal[]> {

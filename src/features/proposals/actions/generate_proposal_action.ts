@@ -1,6 +1,6 @@
 "use server"
 
-import { createClient } from "@/lib/supabase/server";
+import { createClient } from "@/core/lib/supabase/server";
 import { GoogleGenAI } from "@google/genai";
 import { ServiceCatalogItem, Proposal, ProposalVersion } from "../lib/types";
 import { randomBytes } from "crypto";

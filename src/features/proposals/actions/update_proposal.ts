@@ -1,6 +1,6 @@
 "use server"
 
-import { createClient } from "@/lib/supabase/server";
+import { createClient } from "@/core/lib/supabase/server";
 
 export async function updateProposalContent(proposalId: string, currentVersionNumber: number, newContent: any, status: string): Promise<boolean> {
     const supabase = await createClient();

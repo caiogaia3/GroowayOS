@@ -1,4 +1,4 @@
-import { createClient } from "@/lib/supabase/server";
+import { createClient } from "@/core/lib/supabase/server";
 import { getProposalAnalytics } from "@/features/proposals/actions/get_analytics";
 import Link from "next/link";
 import { ArrowLeft, Users, Eye, Clock, Download, TrendingUp } from "lucide-react";
