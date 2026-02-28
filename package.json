@@ -9,7 +9,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "postinstall": "cd intelligence && python3 -m venv venv && ./venv/bin/pip install -r requirements.txt || echo 'Python setup failed or skipped'"
   },
   "dependencies": {
     "@google/genai": "^1.42.0",
