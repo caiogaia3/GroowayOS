@@ -4,11 +4,21 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { LayoutDashboard, ScanSearch, Users, FileText, LogOut } from "lucide-react";
 
-const navItems = [
-    { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-    { href: "/auditor", label: "Auditor", icon: ScanSearch },
-    { href: "/leads", label: "Leads", icon: Users },
-    { href: "/proposals/catalog", label: "Propostas", icon: FileText },
+const navSections = [
+    {
+        title: "Principal",
+        items: [
+            { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
+            { href: "/leads", label: "Leads", icon: Users },
+        ]
+    },
+    {
+        title: "Hub",
+        items: [
+            { href: "/auditor", label: "Auditor", icon: ScanSearch },
+            { href: "/proposals/catalog", label: "Propostas", icon: FileText },
+        ]
+    }
 ];
 
 export function Sidebar() {
@@ -23,23 +33,30 @@ export function Sidebar() {
             </div>
 
             {/* Navigation */}
-            <nav className="flex-1 py-6 space-y-1 px-3">
-                {navItems.map((item) => {
-                    const isActive = pathname.startsWith(item.href);
-                    return (
-                        <Link
-                            key={item.href}
-                            href={item.href}
-                            className={`flex items-center gap-3 px-3 py-3 rounded-xl transition-all duration-200 group ${isActive
-                                    ? "bg-purple-600/20 text-purple-400 shadow-[0_0_20px_rgba(109,40,217,0.15)]"
-                                    : "text-slate-400 hover:text-white hover:bg-white/[0.04]"
-                                }`}
-                        >
-                            <item.icon className={`w-5 h-5 shrink-0 ${isActive ? "text-purple-400" : "text-slate-500 group-hover:text-white"}`} />
-                            <span className="hidden md:inline text-sm font-semibold">{item.label}</span>
-                        </Link>
-                    );
-                })}
+            <nav className="flex-1 py-6 space-y-6 px-3 overflow-y-auto overflow-x-hidden">
+                {navSections.map((section, idx) => (
+                    <div key={idx} className="space-y-1">
+                        <div className="hidden md:block px-3 py-2 text-[10px] font-black uppercase tracking-[0.2em] text-slate-500">
+                            {section.title}
+                        </div>
+                        {section.items.map((item) => {
+                            const isActive = pathname.startsWith(item.href);
+                            return (
+                                <Link
+                                    key={item.href}
+                                    href={item.href}
+                                    className={`flex items-center gap-3 px-3 py-3 rounded-xl transition-all duration-200 group ${isActive
+                                        ? "bg-purple-600/20 text-purple-400 shadow-[0_0_20px_rgba(109,40,217,0.15)]"
+                                        : "text-slate-400 hover:text-white hover:bg-white/[0.04]"
+                                        }`}
+                                >
+                                    <item.icon className={`w-5 h-5 shrink-0 transition-colors ${isActive ? "text-purple-400" : "text-slate-500 group-hover:text-white"}`} />
+                                    <span className="hidden md:inline text-sm font-semibold">{item.label}</span>
+                                </Link>
+                            );
+                        })}
+                    </div>
+                ))}
             </nav>
 
             {/* Footer */}

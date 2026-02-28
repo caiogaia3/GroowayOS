@@ -5,8 +5,15 @@
 
 function getEnv(key: string, required = true): string {
     const value = process.env[key];
-    if (required && !value) {
-        throw new Error(`[Env] Missing required environment variable: ${key}`);
+    const isServer = typeof window === 'undefined';
+    const isPublic = key.startsWith('NEXT_PUBLIC_');
+
+    // Only throw if it's required AND (it's a public var OR we're on the server)
+    if (required && !value && (isServer || isPublic)) {
+        console.warn(`[Env Warning] Missing required environment variable: ${key}`);
+        // Instead of throwing and crashing the page completely, we log a warning.
+        // It's safer for production resilience.
+        return '';
     }
     return value || '';
 }
