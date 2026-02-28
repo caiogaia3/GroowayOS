@@ -2,16 +2,17 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, Users, Zap, Briefcase, Contact, DollarSign, TerminalSquare, Settings, LogOut } from "lucide-react";
+import { LayoutDashboard, Users, Zap, Briefcase, Contact, DollarSign, BarChart3, Workflow, Settings, LogOut } from "lucide-react";
 
 const navItems = [
-    { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
+    { href: "/dashboard", label: "Painel", icon: LayoutDashboard },
     { href: "/leads", label: "Leads", icon: Users },
     { href: "/hub", label: "HUB", icon: Zap },
-    { href: "#crm", label: "CRM", icon: Briefcase },
-    { href: "#clientes", label: "Clientes", icon: Contact },
-    { href: "#financeiro", label: "Financeiro", icon: DollarSign },
-    { href: "#prompts", label: "Prompts", icon: TerminalSquare },
+    { href: "/auditor", label: "CRM", icon: Briefcase },
+    { href: "/leads", label: "Clientes", icon: Contact },
+    { href: "/financeiro", label: "Financeiro", icon: DollarSign },
+    { href: "/analytics", label: "Analytics", icon: BarChart3 },
+    { href: "#automacoes", label: "Automações", icon: Workflow },
 ];
 
 export function Sidebar() {
