@@ -78,6 +78,13 @@ export default function AuditorPage() {
             const alchemist = xrayStatus.reportData.skills_results.find((s: any) => s.id === 'alchemist');
             if (alchemist) setValuePropositionData(alchemist.findings);
 
+            // Play notification sound
+            try {
+                const audio = new Audio('https://actions.google.com/sounds/v1/alarms/beep_short.ogg');
+                audio.volume = 0.5;
+                audio.play().catch(e => console.log('Audio autoplay blocked by browser', e));
+            } catch (e) { }
+
             setAppState('result');
             setProgress(100);
         } else if (xrayStatus.status === 'failed') {
