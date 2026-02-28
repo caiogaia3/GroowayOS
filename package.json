@@ -8,6 +8,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
+    "prestart": "python3 -m pip install -r intelligence/requirements.txt --break-system-packages || echo 'Pip failed but continuing'",
     "start": "next start",
     "lint": "eslint"
   },
