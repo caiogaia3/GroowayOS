@@ -29,50 +29,22 @@ export async function triggerAnalysisAction(params: TriggerAnalysisInput) {
         const jsonInput = JSON.stringify(validatedParams);
 
         console.log(`[*] Triggering Python analysis for: ${params.url}`);
-        console.log(`    CWD: ${pythonRoot}`);
 
-        // --- HACK EXTREMO PARA O NIXPACKS / EASYPANEL ---
-        // O Easypanel deleta qualquer coisa que instalamos na máquina de Build
-        // Então instalamos em tempo real na máquina efêmera toda vez que o botão é clicado!
-        try {
-            console.log(`[*] Instalando dependências de IA "On-The-Fly" no container ativo...`);
-            const onTheFlyPip = spawnSync('python3', [
-                '-m', 'pip', 'install', '-r', 'requirements.txt', '--break-system-packages'
-            ], {
-                cwd: pythonRoot,
-                encoding: 'utf-8',
-                stdio: 'inherit' // Permite ver o output nos logs
-            });
-            console.log(`[*] Pip on-the-fly terminou.`);
-        } catch (e) {
-            console.log(`[!] Falha no Hack do PIP On-The-Fly:`, e);
-        }
-        // ------------------------------------------------
-
-        // Log python properties on server environment before execution
-        try {
-            console.log(`[V] node process.cwd():`, process.cwd());
-            const pythonPath = spawnSync('which', ['python3'], { encoding: 'utf-8' });
-            console.log(`[V] which python3:`, pythonPath.stdout.trim());
-            const pipFreeze = spawnSync('python3', ['-m', 'pip', 'freeze'], { encoding: 'utf-8' });
-            console.log(`[V] pip freeze packages:`, pipFreeze.stdout.slice(0, 100).replace(/\n/g, ', '));
-        } catch (e) {
-            console.log(`[V] Failed to check python paths`, e);
-        }
-
-        // Nixpacks implementation relies on an explicitly built venv at /app/venv
-        let execPython = '/app/venv/bin/python3';
+        // Point to the persistent venv created in nixpacks.toml
+        let execPython = '/app/.venv/bin/python3';
         if (!fs.existsSync(execPython)) {
-            console.log(`[!] Venv path not found at ${execPython}, trying relative venv...`);
-            const fallback = `${pythonRoot}/venv/bin/python3`;
-            execPython = fs.existsSync(fallback) ? fallback : 'python3';
-            console.log(`[!] Switching to fallback execution: ${execPython}`);
+            console.warn(`[!] Persistent venv not found at ${execPython}, falling back to system python3`);
+            execPython = 'python3';
         }
 
         // Spawn process
         const pythonProcess = spawn(execPython, [scriptPath, jsonInput], {
             cwd: pythonRoot,
-            env: { ...process.env, PYTHONPATH: pythonRoot }
+            env: {
+                ...process.env,
+                PYTHONPATH: pythonRoot,
+                PYTHONUNBUFFERED: "1"
+            }
         });
 
         // We don't wait for it to finish (background task)
