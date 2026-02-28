@@ -1,0 +1,105 @@
+{
+    "entities": [
+        {
+            "name": "Empresa",
+            "type": "Entidade de Negócio",
+            "necessity": "Obrigatório",
+            "description": "O cliente ou lead que está sendo analisado."
+        },
+        {
+            "name": "Diagnóstico (Raio-X)",
+            "type": "Recurso",
+            "necessity": "Obrigatório",
+            "description": "Relatório técnico detalhando falhas de GMB, SEO, Performance e Redes Sociais."
+        },
+        {
+            "name": "Proposta Premium",
+            "type": "Recurso",
+            "necessity": "Obrigatório",
+            "description": "Documento comercial estratégico gerado com base nas dores identificadas no diagnóstico. Gerada manualmente via botão."
+        },
+        {
+            "name": "Agente de IA",
+            "type": "Serviço",
+            "necessity": "Obrigatório",
+            "description": "Entidade lógica (ex: Boss, Perito, Alquimista) que processa dados específicos."
+        },
+        {
+            "name": "Usuário",
+            "type": "Ator",
+            "necessity": "Obrigatório",
+            "description": "Dono da agência ou colaboradores (no futuro) que operam o sistema."
+        },
+        {
+            "name": "Colaborador",
+            "type": "Ator",
+            "necessity": "Futuro",
+            "description": "Usuário com acesso limitado e permissões sob medida."
+        },
+        {
+            "name": "Lead",
+            "type": "Persona",
+            "necessity": "Estratégico",
+            "description": "A empresa no estágio de prospecção antes de se tornar cliente."
+        }
+    ],
+    "flows": [
+        {
+            "from": "Usuário",
+            "action": "Inicia Análise",
+            "to": "Agente Orquestrador",
+            "data": "URL, Nome da Empresa"
+        },
+        {
+            "from": "Agentes",
+            "action": "Coletam Dados",
+            "to": "Diagnóstico",
+            "data": "HTML, Pontuações, Dores"
+        },
+        {
+            "from": "Usuário",
+            "action": "Clica em 'Gerar Proposta'",
+            "to": "IA Comerciante",
+            "data": "Briefing de Dores"
+        },
+        {
+            "from": "IA Comerciante",
+            "action": "Salva no Supabase",
+            "to": "Banco de Dados",
+            "data": "JSON da Proposta"
+        },
+        {
+            "from": "Proposta Premium",
+            "action": "Gerada para",
+            "to": "Usuário/Lead",
+            "data": "PDF ou Link Web"
+        }
+    ],
+    "missing_components": [
+        {
+            "component": "Sistema de RBAC (Controle de Acesso)",
+            "category": "Segurança",
+            "priority": "Alta",
+            "reason": "Necessário para suportar colaboradores com limites de acesso."
+        },
+        {
+            "component": "Painel de Edição de Proposta",
+            "category": "Funcionalidade",
+            "priority": "Alta",
+            "reason": "Ajustar a oferta final manualmente antes do envio."
+        },
+        {
+            "component": "Extrator de Leads (CRM/Whats)",
+            "category": "Integração",
+            "priority": "Alta",
+            "reason": "Automatizar o envio via WhatsApp e gestão no CRM."
+        },
+        {
+            "component": "Tenant Management",
+            "category": "Infra",
+            "priority": "Média",
+            "reason": "Preparar para estrutura multi-usuário."
+        }
+    ],
+    "questions_for_user": []
+}

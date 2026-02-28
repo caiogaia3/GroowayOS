@@ -23,3 +23,6 @@ predator_report.json
 .gemini/
 .agents/
 brain/
+
+# Turbopack - exclude Python venv symlinks
+intelligence/venv/

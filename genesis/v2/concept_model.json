@@ -1,0 +1,69 @@
+{
+    "project": "GroowayOS",
+    "version": "2.0",
+    "domain": "WhatsApp Automation",
+    "entities": [
+        {
+            "name": "MessageInstance",
+            "description": "Uma mensagem individual enviada ao WhatsApp.",
+            "attributes": [
+                "id",
+                "recipient_phone",
+                "content",
+                "status",
+                "sent_at",
+                "delivered_at",
+                "read_at"
+            ]
+        },
+        {
+            "name": "WhatsAppTemplate",
+            "description": "Modelos pré-definidos de mensagens (ex: envio de diagnóstico, convite para reunião).",
+            "attributes": [
+                "id",
+                "name",
+                "body_text",
+                "variables"
+            ]
+        },
+        {
+            "name": "FollowUpWorkflow",
+            "description": "Sequência lógica de mensagens após a geração de um diagnóstico.",
+            "attributes": [
+                "id",
+                "lead_id",
+                "steps_completed",
+                "next_scheduled_at"
+            ]
+        },
+        {
+            "name": "WhatsAppProvider",
+            "description": "A ponte técnica para o envio (ex: Evolution API, Twilio, WPPConnect).",
+            "attributes": [
+                "id",
+                "provider_type",
+                "api_key",
+                "instance_id"
+            ]
+        }
+    ],
+    "verbs": [
+        {
+            "name": "TriggerMessage",
+            "description": "Disparar o envio manual ou automático de uma proposta via WhatsApp."
+        },
+        {
+            "name": "SyncDeliveryStatus",
+            "description": "Atualizar o CRM com o recibo de entrega/leitura do lead."
+        },
+        {
+            "name": "ManageFollowUp",
+            "description": "Cuidar da cadência de mensagens pós-diagnóstico."
+        }
+    ],
+    "dark_matter": [
+        "Como lidar com banimento de números por excesso de spam?",
+        "Sincronização de conversas bidirecionais (o lead respondeu, o que acontece?)",
+        "Geração dinâmica de links curtos rastreáveis dentro da mensagem."
+    ]
+}
