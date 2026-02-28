@@ -160,6 +160,21 @@ class PredatorOrchestrator:
                     
                 master_report["skills_results"].append(result)
                 
+                # Injeta ID para o Frontend mapear os painéis
+                skill_id_map = {
+                    "TrackingSkill": "tracking",
+                    "PerformanceSkill": "performance",
+                    "MarketResearchSkill": "market",
+                    "SocialMediaResearchSkill": "social",
+                    "GMBAuditorSkill": "gmb",
+                    "KeywordResearchSkill": "keywords",
+                    "SeniorAnalystSkill": "cmo",
+                    "ValuePropositionSkill": "alchemist",
+                    "CloserSkill": "closer",
+                    "DesignTranslationSkill": "design"
+                }
+                result["id"] = skill_id_map.get(skill.__class__.__name__, "unknown")
+                
                 # Dynamic delay to avoid 429
                 agent_name = skill.__class__.__name__
                 if "Skill" in agent_name:

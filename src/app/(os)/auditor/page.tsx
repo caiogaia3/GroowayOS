@@ -78,12 +78,20 @@ export default function AuditorPage() {
             const alchemist = xrayStatus.reportData.skills_results.find((s: any) => s.id === 'alchemist');
             if (alchemist) setValuePropositionData(alchemist.findings);
 
-            // Play notification sound
+            // Play notification sound (Futuristic / Scientific)
             try {
-                const audio = new Audio('https://actions.google.com/sounds/v1/alarms/beep_short.ogg');
-                audio.volume = 0.5;
+                const audio = new Audio('https://cdn.pixabay.com/audio/2022/03/15/audio_249258a595.mp3'); // Sci-fi notification
+                audio.volume = 0.4;
                 audio.play().catch(e => console.log('Audio autoplay blocked by browser', e));
             } catch (e) { }
+
+            // Browser Notification
+            if ("Notification" in window && Notification.permission === "granted") {
+                new Notification("Raio-X GroowayOS Concluído", {
+                    body: `A análise estratégica da ${companyName || 'empresa'} terminou!`,
+                    icon: "/favicon.ico"
+                });
+            }
 
             setAppState('result');
             setProgress(100);
@@ -91,7 +99,14 @@ export default function AuditorPage() {
             setStatusMessage('A análise falhou: ' + xrayStatus.error);
             alert('A análise falhou: ' + xrayStatus.error);
         }
-    }, [xrayStatus]);
+    }, [xrayStatus, companyName]);
+
+    // Request permissions on mount
+    React.useEffect(() => {
+        if ("Notification" in window && Notification.permission === "default") {
+            Notification.requestPermission();
+        }
+    }, []);
 
     const availableAgents = [
         { id: 'tracking', label: 'Rastreador de Pixels', default: true },
