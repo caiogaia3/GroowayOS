@@ -42,9 +42,14 @@ export async function triggerAnalysisAction(params: TriggerAnalysisInput) {
             console.log(`[V] Failed to check python paths`, e);
         }
 
-        // In the Dockerfile, we explicitly install dependencies to the system global Python3 via break-system-packages
-        // So we strictly invoke 'python3' and it will resolve from PATH.
-        const execPython = 'python3';
+        // Nixpacks implementation relies on an explicitly built venv at /app/venv
+        let execPython = '/app/venv/bin/python3';
+        if (!fs.existsSync(execPython)) {
+            console.log(`[!] Venv path not found at ${execPython}, trying relative venv...`);
+            const fallback = `${pythonRoot}/venv/bin/python3`;
+            execPython = fs.existsSync(fallback) ? fallback : 'python3';
+            console.log(`[!] Switching to fallback execution: ${execPython}`);
+        }
 
         // Spawn process
         const pythonProcess = spawn(execPython, [scriptPath, jsonInput], {
