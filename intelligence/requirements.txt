@@ -64,5 +64,5 @@ tqdm==4.67.3
 typing-inspection==0.4.2
 typing_extensions==4.15.0
 urllib3==2.6.3
-websockets==15.0.1
+websockets>=13.0.0,<15.0.0
 supabase==2.15.2
