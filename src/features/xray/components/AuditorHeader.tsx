@@ -1,8 +1,12 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Users } from 'lucide-react';
+import { Users, History } from 'lucide-react';
 
-export function AuditorHeader() {
+interface AuditorHeaderProps {
+    onOpenHistory?: () => void;
+}
+
+export function AuditorHeader({ onOpenHistory }: AuditorHeaderProps) {
     return (
         <header className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-12">
             <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }}>
@@ -12,6 +16,14 @@ export function AuditorHeader() {
                 <p className="text-slate-400 font-medium max-w-md italic">A inteligência operacional da Agência Grooway.</p>
             </motion.div>
             <div className="flex items-center gap-4">
+                {onOpenHistory && (
+                    <button
+                        onClick={onOpenHistory}
+                        className="text-[10px] font-black uppercase tracking-widest text-slate-500 hover:text-white transition-colors flex items-center gap-2 bg-white/5 px-3 py-1.5 rounded-lg border border-white/5 hover:border-white/10"
+                    >
+                        <History className="w-3 h-3" /> Histórico
+                    </button>
+                )}
                 <a
                     href="/leads"
                     className="text-[10px] font-black uppercase tracking-widest text-slate-500 hover:text-white transition-colors flex items-center gap-2 bg-white/5 px-3 py-1.5 rounded-lg border border-white/5 hover:border-white/10"

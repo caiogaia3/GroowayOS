@@ -14,6 +14,7 @@ import { AuditorHeader } from '@/features/xray/components/AuditorHeader';
 import { ResultsTabs } from '@/features/xray/components/ResultsTabs';
 import { ResultsSummary, getScoreBadge } from '@/features/xray/components/ResultsSummary';
 import { DiagnosticModal } from '@/features/xray/components/DiagnosticModal';
+import { HistoryModal } from '@/features/xray/components/HistoryModal';
 
 // Tabs
 import { TrackingPanel } from '@/features/xray/components/tabs/TrackingPanel';
@@ -56,6 +57,7 @@ export default function AuditorPage() {
     const [commercialPlan, setCommercialPlan] = useState<any>(null);
     const [showDiagnosticModal, setShowDiagnosticModal] = useState(false);
     const [showValueProposition, setShowValueProposition] = useState(false);
+    const [showHistory, setShowHistory] = useState(false);
     const [valuePropositionData, setValuePropositionData] = useState<any>(null);
     const [isSaving, setIsSaving] = useState(false);
     const [shareLink, setShareLink] = useState<string | null>(null);
@@ -189,7 +191,7 @@ export default function AuditorPage() {
     return (
         <main className="min-h-screen bg-[#020617] text-slate-200 p-4 sm:p-8 font-sans">
             <div className="max-w-7xl mx-auto space-y-8">
-                <AuditorHeader />
+                <AuditorHeader onOpenHistory={() => setShowHistory(true)} />
 
                 {appState === 'input' && (
                     <AuditorForm
@@ -277,6 +279,11 @@ export default function AuditorPage() {
                 data={valuePropositionData}
                 companyName={companyName}
                 onDownloadDiagnostic={() => { }}
+            />
+
+            <HistoryModal
+                isOpen={showHistory}
+                onClose={() => setShowHistory(false)}
             />
 
             <div className="hidden">
