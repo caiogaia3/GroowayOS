@@ -152,7 +152,6 @@ class MarketResearchSkill(PredatorSkill):
                 "internal_boss_ammo": "3 argumentos de fechamento brutais baseados nessa pesquisa."
             }}
             """
-            """
 
             # Ativação do LLM (Gemini com fallback OpenAI)
             json_data = self._call_llm_json(prompt)
