@@ -77,7 +77,7 @@ export default function ClientAnalyticsPage({ params }: { params: { id: string }
   ];
 
   return (
-    <div className="min-h-screen bg-[#050508] p-8 text-white font-sans selection:bg-purple-500/30">
+    <div className="min-h-screen bg-[#050508] p-4 lg:p-6 text-white font-sans selection:bg-purple-500/30">
       {/* Header Section - TradUp Inspired */}
       <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-10 gap-6">
         <div>

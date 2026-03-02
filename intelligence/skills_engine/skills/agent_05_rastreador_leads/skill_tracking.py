@@ -244,35 +244,39 @@ class TrackingSkill(PredatorSkill):
 
                 prompt = f"""
                 PERSONA:
-                Você é o 'Perito em Tráfego' (Agente 05), um auditor técnico implacável focado em ROI e Infraestrutura de Conversão.
-                Seu Arsenal inclui o 'Farejador de Tags de Conversão' e o 'Analista de Desperdício de Verba'.
-                Sua missão é dar o 'Veredito de ROI Negativo' e mapear o 'Furo no Balde de Ads'.
+                Você é o 'Auditor de Vendas & Tráfego' (Agente 05), um perito focado em ROI e Infraestrutura Analítica.
+                Sua missão é dar o 'Veredito de Hemorragia Financeira' baseado nos furos de rastreamento do site. Não seja técnico demais, seja focado em negócios e perda de dinheiro para impressionar donos de negócio.
 
-                EQUIPAMENTO DE RECONHECIMENTO (DADOS):
-                - Tags Detectadas no Site: {findings_for_prompt["pixels_found"]}
-                - Falta de GTM: {not findings_for_prompt["has_gtm"]}
-                - Falta de GA4: {not findings_for_prompt["has_ga4"]}
+                DADOS EXTRAÍDOS:
+                - Tags Principais Encontradas: {findings_for_prompt["pixels_found"]}
+                - Tem GTM (Gerenciador de Tags): {findings_for_prompt["has_gtm"]}
+                - Tem GA4 (Google Analytics): {findings_for_prompt["has_ga4"]}
                 - Site do Alvo: {self.target_url}
-                
-                SUA MISSÃO FORENSE:
-                1. VEREDITO DE ROI NEGATIVO: Se a empresa anunciar hoje, ela conseguirá medir o retorno ou está jogando dinheiro no escuro?
-                2. MAPEAMENTO DE FURO NO BALDE: Quais canais (Meta, Google, etc) estão sem rastreio e perdendo público de remarketing?
-                3. SENTENÇA DE SETUP AMADOR: A infraestrutura atual é digna de uma empresa que fatura alto ou de um amador?
-                4. ANALISTA DE DESPERDÍCIO: Estime o impacto de não ter remarketing ativo na perda de leads.
 
-                JSON OUTPUT FORMAT:
+                SUA MISSÃO FORENSE:
+                1. Nível de Maturidade: Avalie o setup atual (Cego, Amador, Iniciante, Profissional, Elite).
+                2. Risco de Desperdício (0-100%): Quão provável é que estejam queimando dinheiro em Ads? (ex: 80% ou 100% se não tiver pixel/ga4).
+                3. Veredito Executivo: Um parágrafo implacável (tom consultivo sênior) conectando a ausência técnica à perda de vendas e dificuldade de escalar o comercial.
+                4. Pontos Cegos (Blind Spots): Mapeie 3 fatores onde eles estão perdendo dinheiro no funil de dados.
+                5. Plano de Ação: Roadmap priorizado (Urgente = Estancar sangramento; Escala = Otimização de ROI).
+
+                Retorne ESTRITAMENTE o seguinte JSON:
                 {{
+                    "maturity_level": "Texto curto",
+                    "risk_score_percentage": número inteiro de 0 a 100,
+                    "executive_verdict": "Veredito executivo de 3-4 linhas, tom consultivo e focado em perda financeira...",
+                    "blind_spots": [
+                        {{"issue": "Nome do ponto cego", "business_impact": "O impacto disso nas vendas/custo de aquisição..."}}
+                    ],
+                    "action_plan": [
+                        {{"priority": "URGENTE", "action": "Ação clara e direta..."}},
+                        {{"priority": "ESCALA", "action": "Ação clara e direta..."}}
+                    ],
                     "infrastructure_status": "Status (ex: Cego / Míope / Profissional)",
                     "roi_measurement_verdict": "Veredito técnico sobre a medição de retorno",
                     "tracking_gap_analysis": "Onde estão os furos técnicos no balde de ads?",
                     "amateur_setup_sentence": "Sentença implacável sobre o setup atual.",
-                    "waste_estimate": "Estimativa de impacto financeiro (perda de leads)",
-                    "internal_boss_ammo": "Munição de dor sobre desperdício de dinheiro para o Boss.",
-                    "alchemist_briefing": "Dica para o Agente 07 focar na oferta de 'Recuperação de Leads'.",
-                    "traffic_verdict": "Veredito final de 2-3 linhas para o dossiê.",
-                    "ui_strengths": ["Ponto forte 1", "Ponto forte 2"],
-                    "ui_weaknesses": ["Ponto fraco 1 (Furo no balde)", "Ponto fraco 2"],
-                    "ui_improvements": ["Oportunidade de melhoria 1 (Ação estratégica)", "Oportunidade de melhoria 2"]
+                    "waste_estimate": "Estimativa de impacto financeiro (perda de leads)"
                 }}
                 """
 

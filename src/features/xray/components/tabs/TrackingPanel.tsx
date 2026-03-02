@@ -15,9 +15,17 @@ interface TrackingPanelProps {
             whatsapp_number?: string;
             has_utm_links?: boolean;
             has_datalayer?: boolean;
+            // Old generic ones
             ui_strengths?: string[];
             ui_weaknesses?: string[];
             ui_improvements?: string[];
+            // New CFO Executive Ones
+            maturity_level?: string;
+            risk_score_percentage?: number;
+            executive_verdict?: string;
+            blind_spots?: Array<{ issue: string; business_impact: string }>;
+            action_plan?: Array<{ priority: string; action: string }>;
+            infrastructure_status?: string;
         };
     };
     getScoreBadge: (score: number) => React.ReactNode;
