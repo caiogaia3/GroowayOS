@@ -5,11 +5,13 @@ import {
     Users,
     Kanban,
     ClipboardList,
-    Receipt
+    Receipt,
+    Target
 } from 'lucide-react';
 
 const CRM_ITEMS = [
     { id: 'contatos', label: 'Contatos', href: '/crm', icon: Users },
+    { id: 'leads', label: 'Leads', href: '/crm/leads', icon: Target },
     { id: 'pipeline', label: 'Pipeline', href: '/crm/pipeline', icon: Kanban },
     { id: 'tarefas', label: 'Tarefas', href: '#', icon: ClipboardList },
     { id: 'faturamento', label: 'Faturamento', href: '#', icon: Receipt },
