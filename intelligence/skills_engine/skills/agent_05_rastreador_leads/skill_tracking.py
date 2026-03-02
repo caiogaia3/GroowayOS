@@ -50,7 +50,6 @@ class TrackingSkill(PredatorSkill):
                 client = ApifyClient(self.apify_token)
                 
                 # Actor: apify/playwright-scraper
-                # pageFunction que detecta os tokens no contexto do browser
                 run_input = {
                     "startUrls": [{"url": self.target_url}],
                     "useChrome": True,
@@ -68,10 +67,7 @@ class TrackingSkill(PredatorSkill):
                             rendered_html: ""
                         };
 
-                        // 1. Detectar GTM e GA4 via window
                         result.has_datalayer = !!window.dataLayer;
-                        
-                        // Extrair IDs do HTML renderizado
                         const content = await page.content();
                         result.rendered_html = content;
 
@@ -87,12 +83,10 @@ class TrackingSkill(PredatorSkill):
                         const adsMatch = content.match(/AW-\d+/g);
                         if (adsMatch) result.google_ads_ids = [...new Set(adsMatch)];
 
-                        // WhatsApp
                         const waLinks = await page.$$eval('a[href*="wa.me"], a[href*="api.whatsapp.com"]', 
                             els => els.map(el => el.href));
                         result.whatsapp_links = waLinks;
 
-                        // UTMs em links internos
                         const utmLinks = await page.$$eval('a[href*="utm_"]', 
                             els => els.map(el => el.href));
                         result.utm_links = utmLinks;
@@ -111,12 +105,7 @@ class TrackingSkill(PredatorSkill):
             except Exception as e:
                 print(f"  [Tracking Agent] Erro ao chamar Apify: {e}")
 
-        # Se o Apify falhou ou não trouxe dados, usamos o fallback estático (soup/raw_html)
         src_html = apify_results.get("rendered_html", self.raw_html) if apify_results else self.raw_html
-        
-        # =============================================
-        # PROCESSAMENTO DE SINAIS (Sniper + Static Fallback)
-        # =============================================
         
         # 1. GTM
         has_gtm = False
@@ -165,7 +154,7 @@ class TrackingSkill(PredatorSkill):
             report["critical_pains"].append("Hemorragia de Receita: Site sem Pixel para Remarketing.")
             report["findings"]["evidences"].append("Pixel da Meta ausente. Perdendo 100% do público do Instagram/Facebook.")
 
-        # 3.5 Google Ads (Sinais Ativos)
+        # 3.5 Google Ads
         has_ads = False
         if apify_results and apify_results.get("google_ads_ids"):
             has_ads = True
@@ -179,7 +168,7 @@ class TrackingSkill(PredatorSkill):
         else:
             briefing["pontos_negativos"].append("Sem sinais de Google Ads ativos.")
 
-        # 4. WhatsApp (Sniper Especializado)
+        # 4. WhatsApp
         wa_found = False
         wa_num = None
         if apify_results and apify_results.get("whatsapp_links"):
@@ -189,7 +178,6 @@ class TrackingSkill(PredatorSkill):
                 if m: wa_num = m.group(1)
         
         if not wa_found:
-            # Fallback regex no HTML renderizado
             m = re.search(r'(?:wa\.me/|api\.whatsapp\.com/send\?phone=)(\d+)', src_html)
             if m:
                 wa_found = True
@@ -203,7 +191,7 @@ class TrackingSkill(PredatorSkill):
             report["score"] -= 15
             report["critical_pains"].append("Canal de Vendas Diretas Ausente (Sem WhatsApp).")
 
-        # 5. UTMs e Tráfego Cego
+        # 5. UTMs
         has_utm = False
         if apify_results and apify_results.get("utm_links"):
             has_utm = True
@@ -217,105 +205,52 @@ class TrackingSkill(PredatorSkill):
             report["score"] -= 10
             report["critical_pains"].append("Gestão de Tráfego Cega: UTMs ausentes nos links.")
 
-        # =============================================
-        # 7. ANÁLISE CONSULTIVA VIA IA (Arsenal Activation)
-        # =============================================
-        score = report["score"] # Initialize local score variable
+        # AI ANALYSIS
         if self.api_key:
             try:
-                ai_client = genai.Client(api_key=self.api_key)
-                
-                # Prepare findings for the new prompt structure
                 pixels_found_list = []
-                if report["findings"]["has_gtm"]:
-                    pixels_found_list.append("Google Tag Manager")
-                if report["findings"]["has_ga4_base"]:
-                    pixels_found_list.append("Google Analytics (GA4/UA)")
-                if report["findings"]["has_meta_pixel"]:
-                    pixels_found_list.append("Meta Pixel")
-                if report["findings"]["has_google_ads_signals"]:
-                    pixels_found_list.append("Google Ads Conversion/Remarketing")
+                if report["findings"].get("has_gtm"): pixels_found_list.append("Google Tag Manager")
+                if report["findings"].get("has_ga4_base"): pixels_found_list.append("Google Analytics (GA4)")
+                if report["findings"].get("has_meta_pixel"): pixels_found_list.append("Meta Pixel")
                 
-                findings_for_prompt = {
-                    "pixels_found": ", ".join(pixels_found_list) if pixels_found_list else "Nenhum pixel/tag principal detectado",
-                    "has_gtm": report["findings"]["has_gtm"],
-                    "has_ga4": report["findings"]["has_ga4_base"], # Using has_ga4_base as has_ga4
-                }
-
                 prompt = f"""
                 PERSONA:
-                Você é o 'Auditor de Vendas & Tráfego' (Agente 05), um perito focado em ROI e Infraestrutura Analítica.
-                Sua missão é dar o 'Veredito de Hemorragia Financeira' baseado nos furos de rastreamento do site. Não seja técnico demais, seja focado em negócios e perda de dinheiro para impressionar donos de negócio.
+                Você é o 'Auditor de Vendas & Tráfego' (Agente 05).
+                Sua missão é dar o 'Veredito de Hemorragia Financeira' baseado nos furos de rastreamento.
 
                 DADOS EXTRAÍDOS:
-                - Tags Principais Encontradas: {findings_for_prompt["pixels_found"]}
-                - Tem GTM (Gerenciador de Tags): {findings_for_prompt["has_gtm"]}
-                - Tem GA4 (Google Analytics): {findings_for_prompt["has_ga4"]}
+                - Tags Principais Encontradas: {", ".join(pixels_found_list) if pixels_found_list else "Nenhuma"}
+                - Tem GTM: {report["findings"].get("has_gtm")}
+                - Tem GA4: {report["findings"].get("has_ga4_base")}
+                - Tem Pixel Meta: {report["findings"].get("has_meta_pixel")}
+                - Tem WhatsApp: {report["findings"].get("has_whatsapp_button")}
+                - Tem UTMs: {report["findings"].get("has_utm_links")}
                 - Site do Alvo: {self.target_url}
 
-                SUA MISSÃO FORENSE:
-                1. Nível de Maturidade: Avalie o setup atual (Cego, Amador, Iniciante, Profissional, Elite).
-                2. Risco de Desperdício (0-100%): Quão provável é que estejam queimando dinheiro em Ads? (ex: 80% ou 100% se não tiver pixel/ga4).
-                3. Veredito Executivo: Um parágrafo implacável (tom consultivo sênior) conectando a ausência técnica à perda de vendas e dificuldade de escalar o comercial.
-                4. Pontos Cegos (Blind Spots): Mapeie 3 fatores onde eles estão perdendo dinheiro no funil de dados.
-                5. Plano de Ação: Roadmap priorizado (Urgente = Estancar sangramento; Escala = Otimização de ROI).
-
-                Retorne ESTRITAMENTE o seguinte JSON:
+                SUA MISSÃO:
+                1. Nível de Maturidade (Cego, Amador, Iniciante, Profissional, Elite).
+                2. Risco de Desperdício (0-100%).
+                3. Veredito Executivo: 1 frase de impacto sobre o dinheiro perdido.
+                4. Pontos Cegos: Lista de objetos {{"issue": "...", "business_impact": "..."}}.
+                5. Plano de Ação: Lista de objetos {{"priority": "URGENTE" ou "ESCALA", "action": "..."}}.
+                6. Alertas Críticos EXATAMENTE no formato: "[FERRAMENTA] não encontrada causando [IMPACTO 1], [IMPACTO 2] e [IMPACTO 3]".
+                
+                JSON Output Format:
                 {{
-                    "maturity_level": "Texto curto",
-                    "risk_score_percentage": número inteiro de 0 a 100,
-                    "executive_verdict": "Veredito executivo de 3-4 linhas, tom consultivo e focado em perda financeira...",
-                    "blind_spots": [
-                        {{"issue": "Nome do ponto cego", "business_impact": "O impacto disso nas vendas/custo de aquisição..."}}
-                    ],
-                    "action_plan": [
-                        {{"priority": "URGENTE", "action": "Ação clara e direta..."}},
-                        {{"priority": "ESCALA", "action": "Ação clara e direta..."}}
-                    ],
-                    "infrastructure_status": "Status (ex: Cego / Míope / Profissional)",
-                    "roi_measurement_verdict": "Veredito técnico sobre a medição de retorno",
-                    "tracking_gap_analysis": "Onde estão os furos técnicos no balde de ads?",
-                    "amateur_setup_sentence": "Sentença implacável sobre o setup atual.",
-                    "waste_estimate": "Estimativa de impacto financeiro (perda de leads)"
+                    "maturity_level": "...",
+                    "risk_score_percentage": 0-100,
+                    "executive_verdict": "...",
+                    "blind_spots": [{{ "issue": "...", "business_impact": "..." }}],
+                    "action_plan": [{{ "priority": "...", "action": "..." }}],
+                    "critical_alerts": ["..."]
                 }}
                 """
-
+                
                 json_data = self._call_llm_json(prompt)
-
                 if json_data and isinstance(json_data, dict):
                     report["findings"].update(json_data)
                     
-                    verdict = json_data.get("traffic_verdict", "")
-                    if verdict:
-                        briefing["recomendacoes"].append(f"VEREDITO DO PERITO EM TRÁFEGO: {verdict}")
-                    
-                    roi_verdict = json_data.get("roi_measurement_verdict", "")
-                    if "Negativo" in str(roi_verdict) or "Impossível" in str(roi_verdict) or "Escuro" in str(roi_verdict):
-                        score -= 30
-                        briefing["pontos_negativos"].append(f"Risco de ROI Cego: {roi_verdict}")
-                    
-                    gap = json_data.get("tracking_gap_analysis", "")
-                    if gap:
-                        briefing["pontos_negativos"].append(f"Furo no Balde de Ads: {gap}")
-                    
-                    report["internal_briefing_for_boss"] = json_data.get("internal_boss_ammo", "")
-                    report["internal_briefing_for_alchemist"] = json_data.get("alchemist_briefing", "")
-                    
-                    briefing["recomendacoes"].extend(json_data.get("strategic_actions", []))
-
             except Exception as ai_err:
                 print(f"  [Traffic Agent] Falha na cognição Arsenal: {ai_err}")
-                report["critical_pains"].append("O Perito em Tráfego falhou na análise forense via IA.")
 
-        report["score"] = max(0, score)
-        
-        # Veredito Final de Arsenal
-        if report["score"] >= 80:
-            report["findings"]["setup_quality"] = "Infraestrutura de Elite"
-        elif report["score"] >= 50:
-            report["findings"]["setup_quality"] = "Miopia Digital Técnica"
-        else:
-            report["findings"]["setup_quality"] = "Cegueira de Dados / ROI em Risco"
-
-        report["boss_briefing"] = briefing
         return report

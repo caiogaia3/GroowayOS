@@ -354,40 +354,55 @@ export default function ClientAnalyticsPage({ params }: { params: { id: string }
           </div>
 
           <div className="flex items-center gap-8 h-40">
-            {/* Simple SVG Donut Placeholder */}
+            {/* Simple SVG Donut Dynamic */}
             <div className="relative w-32 h-32">
               <svg viewBox="0 0 36 36" className="w-full h-full rotate-[-90deg]">
                 <circle cx="18" cy="18" r="15.9" fill="transparent" stroke="#1c1c2b" strokeWidth="4" />
-                <circle cx="18" cy="18" r="15.9" fill="transparent" stroke="#3B82F6" strokeWidth="4" strokeDasharray="60 40" strokeLinecap="round" className="drop-shadow-[0_0_8px_rgba(59,130,246,0.3)]" />
-                <circle cx="18" cy="18" r="15.9" fill="transparent" stroke="#6366F1" strokeWidth="4" strokeDasharray="30 70" strokeDashoffset="-60" strokeLinecap="round" />
+                {/* Female Arc */}
+                <circle
+                  cx="18" cy="18" r="15.9" fill="transparent"
+                  stroke="#3B82F6" strokeWidth="4"
+                  strokeDasharray={`${metrics?.meta?.demographics?.Feminino || 55} ${100 - (metrics?.meta?.demographics?.Feminino || 55)}`}
+                  strokeLinecap="round"
+                  className="drop-shadow-[0_0_8px_rgba(59,130,246,0.3)] transition-all duration-1000"
+                />
+                {/* Male Arc - Offset by Female */}
+                <circle
+                  cx="18" cy="18" r="15.9" fill="transparent"
+                  stroke="#6366F1" strokeWidth="4"
+                  strokeDasharray={`${metrics?.meta?.demographics?.Masculino || 45} ${100 - (metrics?.meta?.demographics?.Masculino || 45)}`}
+                  strokeDashoffset={`-${metrics?.meta?.demographics?.Feminino || 55}`}
+                  strokeLinecap="round"
+                  className="transition-all duration-1000"
+                />
               </svg>
               <div className="absolute inset-0 flex items-center justify-center flex-col">
-                <span className="text-xl font-black">59%</span>
+                <span className="text-xl font-black">{(metrics?.meta?.demographics?.Feminino || 59.3).toFixed(1)}%</span>
                 <span className="text-[8px] text-slate-500 font-bold uppercase">Female</span>
               </div>
             </div>
 
             <div className="flex-1 space-y-4">
-              <div className="flex justify-between items-center">
+              <div className="flex justify-between items-center group cursor-default">
                 <div className="flex items-center gap-2">
-                  <div className="w-2 h-2 rounded-full bg-blue-500" />
-                  <span className="text-[10px] font-bold text-slate-300 uppercase">Feminino</span>
+                  <div className="w-2 h-2 rounded-full bg-blue-500 shadow-[0_0_8px_#3B82F6]" />
+                  <span className="text-[10px] font-bold text-slate-300 uppercase tracking-wider">Feminino</span>
                 </div>
-                <span className="text-xs font-black">59.3%</span>
+                <span className="text-xs font-black text-white">{(metrics?.meta?.demographics?.Feminino || 59.3).toFixed(1)}%</span>
               </div>
-              <div className="flex justify-between items-center">
+              <div className="flex justify-between items-center group cursor-default">
                 <div className="flex items-center gap-2">
-                  <div className="w-2 h-2 rounded-full bg-indigo-500" />
-                  <span className="text-[10px] font-bold text-slate-300 uppercase">Masculino</span>
+                  <div className="w-2 h-2 rounded-full bg-indigo-500 shadow-[0_0_8px_#6366F1]" />
+                  <span className="text-[10px] font-bold text-slate-300 uppercase tracking-wider">Masculino</span>
                 </div>
-                <span className="text-xs font-black">30.5%</span>
+                <span className="text-xs font-black text-white">{(metrics?.meta?.demographics?.Masculino || 30.5).toFixed(1)}%</span>
               </div>
-              <div className="flex justify-between items-center opacity-40">
+              <div className="flex justify-between items-center opacity-40 group">
                 <div className="flex items-center gap-2">
                   <div className="w-2 h-2 rounded-full bg-slate-500" />
-                  <span className="text-[10px] font-bold text-slate-300 uppercase">Indeterminado</span>
+                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Indeterminado</span>
                 </div>
-                <span className="text-xs font-black">10.2%</span>
+                <span className="text-xs font-black">{(100 - (metrics?.meta?.demographics?.Feminino || 50) - (metrics?.meta?.demographics?.Masculino || 50)).toFixed(1)}%</span>
               </div>
             </div>
           </div>

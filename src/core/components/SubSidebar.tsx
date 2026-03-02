@@ -21,10 +21,10 @@ export function SubSidebar({ title, items }: SubSidebarProps) {
     const pathname = usePathname();
 
     return (
-        <aside className="w-48 border-r border-white/5 bg-white/[0.01] backdrop-blur-xl h-[calc(100vh-64px)] sticky top-16 hidden lg:block overflow-y-auto no-scrollbar">
-            <div className="p-6 space-y-8">
+        <aside className="w-40 border-r border-white/5 bg-white/[0.01] backdrop-blur-xl h-[calc(100vh-64px)] sticky top-16 hidden lg:block overflow-y-auto no-scrollbar transition-all duration-500">
+            <div className="p-4 space-y-8">
                 <div>
-                    <h2 className="text-[9px] font-black text-slate-500 uppercase tracking-[0.2em] mb-4 px-2">
+                    <h2 className="text-[8px] font-black text-slate-500 uppercase tracking-[0.2em] mb-4 px-2">
                         {title}
                     </h2>
                     <nav className="space-y-1">
