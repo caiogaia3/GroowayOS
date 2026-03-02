@@ -15,7 +15,8 @@ import {
     Calendar,
     MessageSquare,
     CheckCircle2,
-    ExternalLink
+    ExternalLink,
+    TrendingUp
 } from 'lucide-react';
 
 const TASKS = [
@@ -42,6 +43,9 @@ export default function ClientDetailPage() {
                     </div>
                 </div>
                 <div className="flex gap-4">
+                    <a href={`${typeof window !== 'undefined' ? window.location.pathname : ''}/analytics`} className="flex items-center gap-2 px-6 py-3 rounded-2xl bg-white/[0.02] border border-white/5 text-white text-[10px] font-black uppercase tracking-widest hover:bg-white/[0.05] transition-all">
+                        <TrendingUp className="w-4 h-4 text-blue-400" /> Ver Analytics
+                    </a>
                     <button className="flex items-center gap-2 px-6 py-3 rounded-2xl bg-white/[0.02] border border-white/5 text-white text-[10px] font-black uppercase tracking-widest hover:bg-white/[0.05] transition-all">
                         <Edit3 className="w-4 h-4" /> Editar Perfil
                     </button>
