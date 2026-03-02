@@ -4,25 +4,25 @@ import json
 from google import genai
 from google.genai import types
 from skills_engine.core import PredatorSkill
+import requests
+import time
+from apify_client import ApifyClient
 
 class TrackingSkill(PredatorSkill):
     def __init__(self, target_url):
         super().__init__(target_url)
-        
-        from dotenv import load_dotenv
-        load_dotenv(dotenv_path=".env")
-        load_dotenv(dotenv_path="../raio-x-digital/.env.local")
-        
         self.api_key = os.getenv("GEMINI_API_KEY")
+        self.openai_api_key = os.getenv("OPENAI_API_KEY")
+        self.apify_token = os.getenv("APIFY_API_TOKEN")
 
     def execute(self) -> dict:
         """
-        Caça pixels de conversão, Analytics, GTM, UTMs, botão de WhatsApp,
-        sinais de Google Ads ativo e Meta Ads ativo no corpo do HTML.
-        Gera um boss_briefing com recomendações concretas e usa IA para análise estratégica.
+        Executa a análise de Tracking usando Navegação Real (Apify Playwright)
+        para detectar GA4, GTM, Meta Pixel e CTAs dinâmicos.
         """
-        briefing = self._empty_boss_briefing()
+        print(f"  [Tracking Agent] Iniciando Sniper Mode para: {self.target_url}")
         
+        briefing = self._empty_boss_briefing()
         report = {
             "name": "Tracking & Data Agent",
             "score": 100,
@@ -37,160 +37,185 @@ class TrackingSkill(PredatorSkill):
                 "google_ads_details": [],
                 "has_meta_ads_signals": False,
                 "meta_ads_details": [],
-                "data_maturity_level": "Cego",
+                "data_maturity_level": "Básico",
                 "evidences": []
             },
             "critical_pains": [],
             "boss_briefing": briefing
         }
 
-        if not self.raw_html:
-            report["critical_pains"].append("Falha Crítica: HTML não injetado para análise de Tracking.")
-            return report
+        apify_results = None
+        if self.apify_token:
+            try:
+                client = ApifyClient(self.apify_token)
+                
+                # Actor: apify/playwright-scraper
+                # pageFunction que detecta os tokens no contexto do browser
+                run_input = {
+                    "startUrls": [{"url": self.target_url}],
+                    "useChrome": True,
+                    "maxPagesPerCrawl": 1,
+                    "pageFunction": """
+                    async ({ page, request, log }) => {
+                        const result = {
+                            gtm_ids: [],
+                            ga4_ids: [],
+                            meta_ids: [],
+                            google_ads_ids: [],
+                            has_datalayer: false,
+                            whatsapp_links: [],
+                            utm_links: [],
+                            rendered_html: ""
+                        };
 
-        html_lower = self.raw_html.lower()
+                        // 1. Detectar GTM e GA4 via window
+                        result.has_datalayer = !!window.dataLayer;
+                        
+                        // Extrair IDs do HTML renderizado
+                        const content = await page.content();
+                        result.rendered_html = content;
 
+                        const gtmMatch = content.match(/GTM-[A-Z0-9]+/g);
+                        if (gtmMatch) result.gtm_ids = [...new Set(gtmMatch)];
+
+                        const ga4Match = content.match(/G-[A-Z0-9]+/g);
+                        if (ga4Match) result.ga4_ids = [...new Set(ga4Match)];
+
+                        const metaMatch = content.match(/fbq\\('init',\\s*'(\\d+)'\\)/g);
+                        if (metaMatch) result.meta_ids = metaMatch.map(m => m.match(/\\d+/)[0]);
+
+                        const adsMatch = content.match(/AW-\d+/g);
+                        if (adsMatch) result.google_ads_ids = [...new Set(adsMatch)];
+
+                        // WhatsApp
+                        const waLinks = await page.$$eval('a[href*="wa.me"], a[href*="api.whatsapp.com"]', 
+                            els => els.map(el => el.href));
+                        result.whatsapp_links = waLinks;
+
+                        // UTMs em links internos
+                        const utmLinks = await page.$$eval('a[href*="utm_"]', 
+                            els => els.map(el => el.href));
+                        result.utm_links = utmLinks;
+
+                        return result;
+                    }
+                    """
+                }
+                
+                run = client.actor("apify/playwright-scraper").call(run_input=run_input)
+                items = list(client.dataset(run["defaultDatasetId"]).iterate_items())
+                if items:
+                    apify_results = items[0]
+                    print(f"  [Tracking Agent] Dados extraídos via Sniper: {len(items)} items.")
+
+            except Exception as e:
+                print(f"  [Tracking Agent] Erro ao chamar Apify: {e}")
+
+        # Se o Apify falhou ou não trouxe dados, usamos o fallback estático (soup/raw_html)
+        src_html = apify_results.get("rendered_html", self.raw_html) if apify_results else self.raw_html
+        
         # =============================================
-        # 1. GOOGLE TAG MANAGER (GTM)
+        # PROCESSAMENTO DE SINAIS (Sniper + Static Fallback)
         # =============================================
-        if re.search(r"GTM-[A-Z0-9]+", self.raw_html, re.IGNORECASE):
+        
+        # 1. GTM
+        has_gtm = False
+        if apify_results and apify_results.get("gtm_ids"):
+            has_gtm = True
+            report["findings"]["gtm_details"] = apify_results["gtm_ids"]
+        elif re.search(r"GTM-[A-Z0-9]+", src_html, re.IGNORECASE):
+            has_gtm = True
+
+        if has_gtm:
             report["findings"]["has_gtm"] = True
-            briefing["pontos_positivos"].append("O site possui Google Tag Manager instalado, permitindo gerenciamento centralizado de tags.")
+            briefing["pontos_positivos"].append("Google Tag Manager detectado (Infraestrutura de Controle ativa).")
         else:
             report["score"] -= 25
-            report["critical_pains"].append("Cegueira Completa de Eventos (GTM Inexistente). Impossível otimizar CPA sem ele.")
-            report["findings"]["evidences"].append("O container 'GTM-XXXX' não foi encontrado em nenhuma linha do código-fonte analisado.")
-            briefing["pontos_negativos"].append("Ausência total do Google Tag Manager.")
+            report["critical_pains"].append("Cegueira Completa de Eventos (GTM Inexistente).")
+            report["findings"]["evidences"].append("O container 'GTM-XXXX' não foi encontrado.")
 
-        # =============================================
-        # 2. GOOGLE ANALYTICS (GA4 / UA)
-        # =============================================
-        if re.search(r"G-[A-Z0-9]+|UA-\d+-\d+", self.raw_html, re.IGNORECASE):
+        # 2. GA4
+        has_ga4 = False
+        if apify_results and apify_results.get("ga4_ids"):
+            has_ga4 = True
+            report["findings"]["ga4_details"] = apify_results["ga4_ids"]
+        elif re.search(r"G-[A-Z0-9]+", src_html, re.IGNORECASE):
+            has_ga4 = True
+
+        if has_ga4:
             report["findings"]["has_ga4_base"] = True
-            briefing["pontos_positivos"].append("Google Analytics detectado no site.")
+            briefing["pontos_positivos"].append("Google Analytics 4 detectado.")
         else:
             report["score"] -= 20
-            report["critical_pains"].append("Tráfego Amador: A empresa não sabe de onde vêm os visitantes (Google Analytics Ausente).")
-            report["findings"]["evidences"].append("A varredura completa do head/body HTML não detectou scripts 'gtag.js' do Google Analytics.")
-            briefing["pontos_negativos"].append("Sem Google Analytics. Não sabem quantos visitantes recebem nem de onde vêm.")
+            report["critical_pains"].append("Tráfego Amador: Empresa não mede de onde vêm os visitantes.")
 
-        # =============================================
-        # 3. META PIXEL (Facebook/Instagram)
-        # =============================================
-        has_fbq = bool(re.search(r"fbq\(|fbp=", self.raw_html, re.IGNORECASE))
-        if has_fbq:
+        # 3. Meta Pixel
+        has_pixel = False
+        if apify_results and apify_results.get("meta_ids"):
+            has_pixel = True
+            report["findings"]["meta_pixel_details"] = apify_results["meta_ids"]
+        elif re.search(r"fbq\(|fbp=", src_html, re.IGNORECASE):
+            has_pixel = True
+
+        if has_pixel:
             report["findings"]["has_meta_pixel"] = True
-            briefing["pontos_positivos"].append("Meta Pixel (Facebook/Instagram) detectado no site.")
-            
-            # Verificar se tem eventos avançados (sinais de campanha ativa)
-            advanced_events = []
-            for event in ["Purchase", "Lead", "AddToCart", "InitiateCheckout", "CompleteRegistration", "Contact", "Schedule"]:
-                if event.lower() in html_lower or f"'{event}'" in self.raw_html or f'"{event}"' in self.raw_html:
-                    advanced_events.append(event)
-            
-            if advanced_events:
-                report["findings"]["has_meta_ads_signals"] = True
-                report["findings"]["meta_ads_details"].append(f"Eventos de conversão avançados detectados: {', '.join(advanced_events)}")
-                briefing["pontos_positivos"].append(f"Pixel com eventos avançados ({', '.join(advanced_events)}), indicando campanha de anúncios ativa e otimizada.")
-            else:
-                # Pixel existe mas só com PageView = passivo
-                report["findings"]["meta_ads_details"].append("Pixel instalado mas sem eventos de conversão avançados (apenas PageView). Campanha provavelmente não otimizada.")
-                briefing["pontos_negativos"].append("O Pixel do Meta está instalado mas sem eventos de conversão. Isso indica que não estão rodando campanhas otimizadas ou que o pixel está parado.")
+            briefing["pontos_positivos"].append("Meta Pixel detectado.")
         else:
             report["score"] -= 30
-            report["critical_pains"].append("Hemorragia de Receita: O site não tem Pixel para remarketing de abandono.")
-            report["findings"]["evidences"].append("Pixel da Meta (função 'fbq()') ausente. Usuários não mapeáveis para campanhas no Instagram/Facebook.")
-            briefing["pontos_negativos"].append("Sem Meta Pixel. Impossível fazer remarketing para quem já visitou o site.")
+            report["critical_pains"].append("Hemorragia de Receita: Site sem Pixel para Remarketing.")
+            report["findings"]["evidences"].append("Pixel da Meta ausente. Perdendo 100% do público do Instagram/Facebook.")
 
-        # =============================================
-        # 4. SINAIS DE GOOGLE ADS ATIVO
-        # =============================================
-        google_ads_signals = []
-        
-        # Tag de conversão do Google Ads (AW-)
-        aw_match = re.search(r"AW-\d+", self.raw_html)
-        if aw_match:
-            google_ads_signals.append(f"Tag de conversão Google Ads detectada: {aw_match.group()}")
-        
-        # Doubleclick (rede de display do Google Ads)
-        if "googleads.g.doubleclick.net" in html_lower:
-            google_ads_signals.append("Script DoubleClick detectado (Rede de Display Google Ads)")
-        
-        # GCLID handling (indica que recebem tráfego de Google Ads)
-        if "gclid" in html_lower:
-            google_ads_signals.append("Parâmetro 'gclid' referenciado no código (captura de cliques do Google Ads)")
-        
-        # Google Ads conversion tracking
-        if "conversion.js" in html_lower or "google_tag_params" in html_lower:
-            google_ads_signals.append("Script de conversão do Google Ads detectado")
-        
-        if google_ads_signals:
-            report["findings"]["has_google_ads_signals"] = True
-            report["findings"]["google_ads_details"] = google_ads_signals
-            briefing["pontos_positivos"].append("Sinais de Google Ads ativos detectados no código do site.")
+        # 3.5 Google Ads (Sinais Ativos)
+        has_ads = False
+        if apify_results and apify_results.get("google_ads_ids"):
+            has_ads = True
+            report["findings"]["google_ads_details"] = apify_results["google_ads_ids"]
+        elif re.search(r"AW-\d+", src_html):
+            has_ads = True
+
+        report["findings"]["has_google_ads_signals"] = has_ads
+        if has_ads:
+            briefing["pontos_positivos"].append("Sinais de Google Ads detectados.")
         else:
-            report["findings"]["google_ads_details"].append("Nenhum sinal de Google Ads encontrado no código-fonte.")
-            briefing["pontos_negativos"].append("Sem sinais de Google Ads. A empresa provavelmente não anuncia no Google ou nunca configurou conversões.")
+            briefing["pontos_negativos"].append("Sem sinais de Google Ads ativos.")
 
-        # =============================================
-        # 5. UTM LINKS
-        # =============================================
-        if self.soup:
-            anchors = self.soup.find_all('a', href=True)
-            for a in anchors:
-                href = a['href'].lower()
-                if "utm_source=" in href or "utm_medium=" in href:
-                    report["findings"]["has_utm_links"] = True
-                    break
+        # 4. WhatsApp (Sniper Especializado)
+        wa_found = False
+        wa_num = None
+        if apify_results and apify_results.get("whatsapp_links"):
+            wa_found = True
+            for link in apify_results["whatsapp_links"]:
+                m = re.search(r'(?:wa\.me/|phone=)(\d+)', link)
+                if m: wa_num = m.group(1)
         
-        if not report["findings"]["has_utm_links"]:
-            report["score"] -= 10
-            report["critical_pains"].append("Gestão de Tráfego Cega: Nenhum link do site mapeia a origem do clique (UTMs ausentes).")
-            report["findings"]["evidences"].append("A varredura das tags <a> não encontrou parâmetros 'utm_source' ou 'utm_medium'.")
-            briefing["pontos_negativos"].append("Sem UTMs nos links internos. Não conseguem saber qual canal (Instagram, Email, Google) gera mais vendas.")
-        else:
-            briefing["pontos_positivos"].append("Links com parâmetros UTM detectados, indicando rastreamento de origens de tráfego.")
+        if not wa_found:
+            # Fallback regex no HTML renderizado
+            m = re.search(r'(?:wa\.me/|api\.whatsapp\.com/send\?phone=)(\d+)', src_html)
+            if m:
+                wa_found = True
+                wa_num = m.group(1)
 
-        # =============================================
-        # 6. BOTÃO DE WHATSAPP
-        # =============================================
-        whatsapp_found = False
-        whatsapp_number = None
-        
-        if self.soup:
-            for a in self.soup.find_all('a', href=True):
-                href = a['href']
-                if 'wa.me/' in href or 'api.whatsapp.com' in href or 'whatsapp' in href.lower():
-                    whatsapp_found = True
-                    num_match = re.search(r'(?:wa\.me/|phone=)(\d+)', href)
-                    if num_match:
-                        whatsapp_number = num_match.group(1)
-                    break
-            
-            if not whatsapp_found:
-                for tag in self.soup.find_all(['div', 'a', 'button', 'img'], class_=True):
-                    classes = ' '.join(tag.get('class', []))
-                    if 'whatsapp' in classes.lower() or 'wpp' in classes.lower():
-                        whatsapp_found = True
-                        break
-        
-        if not whatsapp_found:
-            if 'wa.me/' in html_lower or 'api.whatsapp.com' in html_lower:
-                whatsapp_found = True
-                num_match = re.search(r'wa\.me/(\d+)', self.raw_html, re.IGNORECASE)
-                if num_match:
-                    whatsapp_number = num_match.group(1)
-        
-        report["findings"]["has_whatsapp_button"] = whatsapp_found
-        report["findings"]["whatsapp_number"] = whatsapp_number
-        
-        if whatsapp_found:
-            briefing["pontos_positivos"].append(f"Botão de WhatsApp detectado no site{' (Número: ' + whatsapp_number + ')' if whatsapp_number else ''}.")
+        report["findings"]["has_whatsapp_button"] = wa_found
+        report["findings"]["whatsapp_number"] = wa_num
+        if wa_found:
+            briefing["pontos_positivos"].append(f"WhatsApp detectado ({wa_num if wa_num else 'Botão Visível'}).")
         else:
             report["score"] -= 15
-            report["critical_pains"].append("Canal de Vendas Diretas Ausente: Não existe botão de WhatsApp visível no site.")
-            report["findings"]["evidences"].append("Nenhum link para 'wa.me/', 'api.whatsapp.com' ou widget de WhatsApp detectado no DOM.")
-            briefing["pontos_negativos"].append("Sem botão de WhatsApp no site. O visitante não tem um canal direto e imediato de contato.")
+            report["critical_pains"].append("Canal de Vendas Diretas Ausente (Sem WhatsApp).")
+
+        # 5. UTMs e Tráfego Cego
+        has_utm = False
+        if apify_results and apify_results.get("utm_links"):
+            has_utm = True
+        elif "utm_source" in src_html.lower():
+            has_utm = True
+
+        if has_utm:
+            report["findings"]["has_utm_links"] = True
+            briefing["pontos_positivos"].append("Rastreamento de origens (UTMs) detectado.")
+        else:
+            report["score"] -= 10
+            report["critical_pains"].append("Gestão de Tráfego Cega: UTMs ausentes nos links.")
 
         # =============================================
         # 7. ANÁLISE CONSULTIVA VIA IA (Arsenal Activation)
