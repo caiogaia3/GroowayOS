@@ -69,10 +69,10 @@ export default function ClientAnalyticsPage({ params }: { params: { id: string }
 
   // Map the backend data to the UI widget format
   const topWidgets = [
-    { label: "Investimento Total", value: `R$ ${metrics.meta.spend_brl + metrics.google.spend_brl}`, change: "+12.4%", color: "text-blue-400", trend: "up" },
-    { label: "Oportunidades (Sheets)", value: metrics.conversions.total, change: "+8.3%", color: "text-emerald-400", trend: "up" },
-    { label: "CPA Médio Real", value: `R$ ${metrics.conversions.cpl_brl}`, change: "-5.2%", color: "text-purple-400", trend: "down" },
-    { label: "ROI Multiplicador", value: `${metrics.roi_multiplier}x`, change: "+41.7%", color: "text-orange-400", trend: "up" },
+    { label: "Investimento Total", value: `R$ ${(metrics?.meta?.spend_brl || 0) + (metrics?.google?.spend_brl || 0)}`, change: "+12.4%", color: "text-blue-400", trend: "up" },
+    { label: "Oportunidades (Sheets)", value: metrics?.conversions?.total || 0, change: "+8.3%", color: "text-emerald-400", trend: "up" },
+    { label: "CPA Médio Real", value: `R$ ${metrics?.conversions?.cpl_brl || 0}`, change: "-5.2%", color: "text-purple-400", trend: "down" },
+    { label: "ROI Multiplicador", value: `${metrics?.roi_multiplier || 0}x`, change: "+41.7%", color: "text-orange-400", trend: "up" },
     { label: "Taxa de Conversão", value: "39,67%", change: "+16.6%", color: "text-pink-400", trend: "up" },
   ];
 
@@ -234,17 +234,17 @@ export default function ClientAnalyticsPage({ params }: { params: { id: string }
 
             <div>
               <h4 className="text-white/70 text-[10px] font-bold uppercase tracking-[0.2em] mb-4">Investimento Total Q4</h4>
-              <h3 className="text-4xl font-extrabold tracking-tighter italic">R$ {metrics.meta.spend_brl + metrics.google.spend_brl}</h3>
+              <h3 className="text-4xl font-extrabold tracking-tighter italic">R$ {(metrics?.meta?.spend_brl || 0) + (metrics?.google?.spend_brl || 0)}</h3>
             </div>
 
             <div className="flex gap-4">
               <div className="flex-1 bg-white/10 backdrop-blur-md rounded-2xl p-4 border border-white/10">
                 <span className="text-[9px] font-bold uppercase text-white/60 block mb-1">ROI Global</span>
-                <span className="text-lg font-black text-white">+{metrics.roi_multiplier}x</span>
+                <span className="text-lg font-black text-white">+{metrics?.roi_multiplier || 0}x</span>
               </div>
               <div className="flex-1 bg-white/10 backdrop-blur-md rounded-2xl p-4 border border-white/10">
                 <span className="text-[9px] font-bold uppercase text-white/60 block mb-1">Lucro Estimado</span>
-                <span className="text-lg font-black text-white">R$ {metrics.estimated_revenue_brl}</span>
+                <span className="text-lg font-black text-white">R$ {metrics?.estimated_revenue_brl || 0}</span>
               </div>
             </div>
           </div>
@@ -258,10 +258,10 @@ export default function ClientAnalyticsPage({ params }: { params: { id: string }
 
             <div className="space-y-5">
               {[
-                { name: "Facebook Video Ads", cpl: `R$ ${(metrics.conversions.cpl_brl * 0.8).toFixed(2)}`, quality: 92, icon: "FB" },
-                { name: "Google Search - Core", cpl: `R$ ${(metrics.conversions.cpl_brl * 1.1).toFixed(2)}`, quality: 85, icon: "G" },
-                { name: "Instagram Remarketing", cpl: `R$ ${(metrics.conversions.cpl_brl * 0.6).toFixed(2)}`, quality: 98, icon: "IG" },
-                { name: "YouTube Brand Awareness", cpl: `R$ ${(metrics.conversions.cpl_brl * 1.5).toFixed(2)}`, quality: 72, icon: "YT" }
+                { name: "Facebook Video Ads", cpl: `R$ ${((metrics?.conversions?.cpl_brl || 0) * 0.8).toFixed(2)}`, quality: 92, icon: "FB" },
+                { name: "Google Search - Core", cpl: `R$ ${((metrics?.conversions?.cpl_brl || 0) * 1.1).toFixed(2)}`, quality: 85, icon: "G" },
+                { name: "Instagram Remarketing", cpl: `R$ ${((metrics?.conversions?.cpl_brl || 0) * 0.6).toFixed(2)}`, quality: 98, icon: "IG" },
+                { name: "YouTube Brand Awareness", cpl: `R$ ${((metrics?.conversions?.cpl_brl || 0) * 1.5).toFixed(2)}`, quality: 72, icon: "YT" }
               ].map((s, i) => (
                 <div key={i} className="flex justify-between items-center group">
                   <div className="flex items-center gap-4">
