@@ -17,8 +17,8 @@ const navItems = [
 export function Sidebar() {
     const pathname = usePathname();
 
-    // Automatically collapse sidebar if we are inside a workspace with its own secondary menu (like /crm)
-    const isCollapsed = pathname.startsWith("/crm");
+    // Automatically collapse sidebar if we are inside a workspace with its own secondary menu (like /crm or /hub)
+    const isCollapsed = pathname.startsWith("/crm") || pathname.startsWith("/hub");
 
     // "md:w-64" becomes "md:w-20" if collapsed
     const widthClass = isCollapsed ? "md:w-20" : "md:w-64";

@@ -80,8 +80,8 @@ export default function HubFerramentasPage() {
 
                         <div>
                             <div className="flex items-center justify-between mb-8">
-                                <div className={`w-16 h-16 rounded-[24px] bg-white/[0.03] border border-white/10 flex items-center justify-center shadow-2xl`}>
-                                    <tool.icon className={`w-8 h-8 ${tool.color.split(' ')[1]}`} />
+                                <div className={`w-14 h-14 rounded-2xl bg-white/[0.03] border border-white/10 flex items-center justify-center shadow-2xl`}>
+                                    <tool.icon className={`w-6 h-6 ${tool.color.split(' ')[1]}`} />
                                 </div>
                                 <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20">
                                     <div className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
@@ -89,8 +89,8 @@ export default function HubFerramentasPage() {
                                 </div>
                             </div>
 
-                            <h3 className="text-[2.2rem] font-black text-white tracking-widest mb-6 italic">{tool.name}</h3>
-                            <p className="text-slate-400 text-sm font-medium leading-relaxed italic mb-8">
+                            <h3 className="text-2xl font-black text-white tracking-widest mb-4 italic">{tool.name}</h3>
+                            <p className="text-slate-400 text-[13px] font-medium leading-relaxed italic mb-6">
                                 {tool.desc}
                             </p>
                         </div>
