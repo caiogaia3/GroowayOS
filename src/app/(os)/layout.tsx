@@ -1,5 +1,6 @@
 import { Sidebar } from "@/core/components/Sidebar";
 import ShellHeader from "@/core/components/ShellHeader";
+import { OSContentWrapper } from "@/core/components/OSContentWrapper";
 import { createClient } from "@/core/lib/supabase/server";
 import { redirect } from "next/navigation";
 
@@ -23,7 +24,7 @@ export default async function OSLayout({
             {/* Navigation Layer */}
             <Sidebar />
 
-            <div className="flex-1 flex flex-col min-h-screen overflow-hidden pl-20 md:pl-64 transition-all duration-500">
+            <OSContentWrapper>
                 <ShellHeader />
 
                 {/* Scrollable Content Area */}
@@ -33,7 +34,7 @@ export default async function OSLayout({
                         {children}
                     </div>
                 </main>
-            </div>
+            </OSContentWrapper>
         </div>
     );
 }

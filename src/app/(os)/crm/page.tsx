@@ -16,11 +16,12 @@ import {
 } from 'lucide-react';
 
 const CLIENTS = [
-    { name: 'Vortex Ventures', segment: 'TECH', size: '50-100 FUNC.', health: 3, kpi: 92, deadline: true, status: 'ATIVO', color: 'text-emerald-400' },
-    { name: 'Nova Retail', segment: 'VAREJO', size: '500+ FUNC.', health: 2, kpi: 73, deadline: 'warning', status: 'ATIVO', color: 'text-amber-400' },
-    { name: 'Eco Lume', segment: 'ENERGIA', size: '10-50 FUNC.', health: 1, kpi: 45, deadline: 'error', status: 'ATENÇÃO', color: 'text-rose-400' },
-    { name: 'Sky Analytics', segment: 'SAAS', size: '100-200 FUNC.', health: 3, kpi: 98, deadline: true, status: 'ATIVO', color: 'text-emerald-400' },
-    { name: 'Prime Food', segment: 'GASTRO', size: '20-50 FUNC.', health: 1, kpi: 0, deadline: 'pending', status: 'PENDENTE', color: 'text-slate-500' },
+    { id: 'brisa-laser', name: 'Brisa Laser', segment: 'ESTÉTICA', size: '10-50 FUNC.', health: 3, kpi: 99, deadline: true, status: 'ATIVO', color: 'text-emerald-400' },
+    { id: 'vortex', name: 'Vortex Ventures', segment: 'TECH', size: '50-100 FUNC.', health: 3, kpi: 92, deadline: true, status: 'ATIVO', color: 'text-emerald-400' },
+    { id: 'nova-retail', name: 'Nova Retail', segment: 'VAREJO', size: '500+ FUNC.', health: 2, kpi: 73, deadline: 'warning', status: 'ATIVO', color: 'text-amber-400' },
+    { id: 'eco-lume', name: 'Eco Lume', segment: 'ENERGIA', size: '10-50 FUNC.', health: 1, kpi: 45, deadline: 'error', status: 'ATENÇÃO', color: 'text-rose-400' },
+    { id: 'sky-analytics', name: 'Sky Analytics', segment: 'SAAS', size: '100-200 FUNC.', health: 3, kpi: 98, deadline: true, status: 'ATIVO', color: 'text-emerald-400' },
+    { id: 'prime-food', name: 'Prime Food', segment: 'GASTRO', size: '20-50 FUNC.', health: 1, kpi: 0, deadline: 'pending', status: 'PENDENTE', color: 'text-slate-500' },
 ];
 
 export default function GestaoClientesPage() {
@@ -61,7 +62,7 @@ export default function GestaoClientesPage() {
             {/* Clients Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                 {CLIENTS.map((client, i) => (
-                    <a href={`/crm/clientes/vortex`} key={i}>
+                    <a href={`/crm/clientes/${client.id}/analytics`} key={i}>
                         <motion.div
                             initial={{ opacity: 0, y: 20 }}
                             animate={{ opacity: 1, y: 0 }}

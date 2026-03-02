@@ -19,19 +19,62 @@ import {
   Search,
   Plus
 } from "lucide-react";
-import { useState } from "react";
-
-// Mock data based on the Looker reference
-const metrics = [
-  { label: "Investimento Total", value: "R$ 5.176,56", change: "+870.8%", color: "text-blue-400", trend: "up" },
-  { label: "Msgs. Iniciadas", value: "437", change: "+809.3%", color: "text-emerald-400", trend: "up" },
-  { label: "CPA", value: "R$ 11,85", change: "-107.6%", color: "text-purple-400", trend: "down" },
-  { label: "CPL convertido", value: "R$ 31,00", change: "+41.7%", color: "text-orange-400", trend: "up" },
-  { label: "Taxa de Conversão", value: "39,67%", change: "+168.6%", color: "text-pink-400", trend: "up" },
-];
+import { useState, useEffect } from "react";
+import ReactMarkdown from "react-markdown";
+import { getClientMetrics } from "../../../../../actions/client_metrics";
+import { askGeminiAnalytics } from "../../../../../actions/ask_gemini_analytics";
 
 export default function ClientAnalyticsPage({ params }: { params: { id: string } }) {
   const [aiQuery, setAiQuery] = useState("");
+  const [metrics, setMetrics] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+  const [geminiLoading, setGeminiLoading] = useState(false);
+  const [geminiResponse, setGeminiResponse] = useState<string | null>(null);
+
+  const handleGeminiQuery = async (predefinedQuery?: string) => {
+    const queryToUse = predefinedQuery || aiQuery;
+    if (!queryToUse.trim()) return;
+
+    setAiQuery(queryToUse);
+    setGeminiLoading(true);
+    setGeminiResponse(null);
+
+    const res = await askGeminiAnalytics(queryToUse, metrics);
+    if (res.success && res.text) {
+      setGeminiResponse(res.text);
+    } else {
+      setGeminiResponse("Desculpe, não consegui processar a análise no momento. Tente novamente.");
+    }
+    setGeminiLoading(false);
+  };
+
+  useEffect(() => {
+    async function loadData() {
+      const response = await getClientMetrics(params.id);
+      if (response && response.success) {
+        setMetrics(response.data);
+      }
+      setLoading(false);
+    }
+    loadData();
+  }, [params.id]);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-[#050508] flex items-center justify-center">
+        <div className="w-8 h-8 rounded-full bg-blue-500 animate-ping"></div>
+      </div>
+    );
+  }
+
+  // Map the backend data to the UI widget format
+  const topWidgets = [
+    { label: "Investimento Total", value: `R$ ${metrics.meta.spend_brl + metrics.google.spend_brl}`, change: "+12.4%", color: "text-blue-400", trend: "up" },
+    { label: "Oportunidades (Sheets)", value: metrics.conversions.total, change: "+8.3%", color: "text-emerald-400", trend: "up" },
+    { label: "CPA Médio Real", value: `R$ ${metrics.conversions.cpl_brl}`, change: "-5.2%", color: "text-purple-400", trend: "down" },
+    { label: "ROI Multiplicador", value: `${metrics.roi_multiplier}x`, change: "+41.7%", color: "text-orange-400", trend: "up" },
+    { label: "Taxa de Conversão", value: "39,67%", change: "+16.6%", color: "text-pink-400", trend: "up" },
+  ];
 
   return (
     <div className="min-h-screen bg-[#050508] p-8 text-white font-sans selection:bg-purple-500/30">
@@ -46,7 +89,7 @@ export default function ClientAnalyticsPage({ params }: { params: { id: string }
           </div>
           <p className="text-slate-400 text-sm flex items-center gap-2">
             <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-            Dados em tempo real • <span className="opacity-70 italic truncate">Brisa Laser (Qualificado)</span>
+            Dados em tempo real • <span className="opacity-70 italic truncate">Cliente {params.id}</span>
           </p>
         </div>
 
@@ -69,7 +112,7 @@ export default function ClientAnalyticsPage({ params }: { params: { id: string }
 
       {/* KPI Grid - High Glow Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-6 mb-8">
-        {metrics.map((m, i) => (
+        {topWidgets.map((m, i) => (
           <motion.div
             key={i}
             initial={{ opacity: 0, y: 20 }}
@@ -191,17 +234,17 @@ export default function ClientAnalyticsPage({ params }: { params: { id: string }
 
             <div>
               <h4 className="text-white/70 text-[10px] font-bold uppercase tracking-[0.2em] mb-4">Investimento Total Q4</h4>
-              <h3 className="text-4xl font-extrabold tracking-tighter italic">R$ 90.313,32</h3>
+              <h3 className="text-4xl font-extrabold tracking-tighter italic">R$ {metrics.meta.spend_brl + metrics.google.spend_brl}</h3>
             </div>
 
             <div className="flex gap-4">
               <div className="flex-1 bg-white/10 backdrop-blur-md rounded-2xl p-4 border border-white/10">
                 <span className="text-[9px] font-bold uppercase text-white/60 block mb-1">ROI Global</span>
-                <span className="text-lg font-black text-white">+18.4x</span>
+                <span className="text-lg font-black text-white">+{metrics.roi_multiplier}x</span>
               </div>
               <div className="flex-1 bg-white/10 backdrop-blur-md rounded-2xl p-4 border border-white/10">
                 <span className="text-[9px] font-bold uppercase text-white/60 block mb-1">Lucro Estimado</span>
-                <span className="text-lg font-black text-white">R$ 75k</span>
+                <span className="text-lg font-black text-white">R$ {metrics.estimated_revenue_brl}</span>
               </div>
             </div>
           </div>
@@ -215,10 +258,10 @@ export default function ClientAnalyticsPage({ params }: { params: { id: string }
 
             <div className="space-y-5">
               {[
-                { name: "Facebook Video Ads", cpl: "R$ 8,20", quality: 92, icon: "FB" },
-                { name: "Google Search - Core", cpl: "R$ 12,40", quality: 85, icon: "G" },
-                { name: "Instagram Remarketing", cpl: "R$ 5,10", quality: 98, icon: "IG" },
-                { name: "YouTube Brand Awareness", cpl: "R$ 14,30", quality: 72, icon: "YT" }
+                { name: "Facebook Video Ads", cpl: `R$ ${(metrics.conversions.cpl_brl * 0.8).toFixed(2)}`, quality: 92, icon: "FB" },
+                { name: "Google Search - Core", cpl: `R$ ${(metrics.conversions.cpl_brl * 1.1).toFixed(2)}`, quality: 85, icon: "G" },
+                { name: "Instagram Remarketing", cpl: `R$ ${(metrics.conversions.cpl_brl * 0.6).toFixed(2)}`, quality: 98, icon: "IG" },
+                { name: "YouTube Brand Awareness", cpl: `R$ ${(metrics.conversions.cpl_brl * 1.5).toFixed(2)}`, quality: 72, icon: "YT" }
               ].map((s, i) => (
                 <div key={i} className="flex justify-between items-center group">
                   <div className="flex items-center gap-4">
@@ -261,21 +304,39 @@ export default function ClientAnalyticsPage({ params }: { params: { id: string }
             <textarea
               value={aiQuery}
               onChange={(e) => setAiQuery(e.target.value)}
+              onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleGeminiQuery(); } }}
               placeholder="Ex: 'Compare o ROI da Brisa Laser entre Meta e Google Ads nos últimos 15 dias e sugira um novo widget de barras'..."
-              className="w-full bg-white/5 border border-white/10 rounded-2xl p-6 text-sm focus:outline-none focus:border-blue-500/50 min-h-[120px] transition-all placeholder:text-slate-600 resize-none"
+              className="w-full bg-white/5 border border-white/10 rounded-2xl p-6 pb-16 text-sm focus:outline-none focus:border-blue-500/50 min-h-[120px] transition-all placeholder:text-slate-600 resize-none z-10 relative"
             />
-            <div className="absolute bottom-4 right-4 flex gap-2">
-              <button className="flex items-center gap-2 px-6 py-2.5 bg-blue-600 hover:bg-blue-500 rounded-xl transition-all text-xs font-black uppercase tracking-wider">
-                Executar Análise
-                <ArrowUpRight className="w-3.5 h-3.5" />
+            <div className="absolute bottom-4 right-4 flex gap-2 z-20">
+              <button
+                onClick={() => handleGeminiQuery()}
+                disabled={geminiLoading}
+                className="flex items-center gap-2 px-6 py-2.5 bg-blue-600 hover:bg-blue-500 disabled:bg-blue-600/50 rounded-xl transition-all text-xs font-black uppercase tracking-wider">
+                {geminiLoading ? 'Processando...' : 'Executar Análise'}
+                {!geminiLoading && <ArrowUpRight className="w-3.5 h-3.5" />}
               </button>
             </div>
           </div>
 
+          {/* Gemini Response Area */}
+          {geminiResponse && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: "auto" }}
+              className="mt-6 p-6 bg-blue-500/10 border border-blue-500/20 rounded-2xl text-sm leading-relaxed prose prose-invert max-w-none"
+            >
+              <ReactMarkdown>{geminiResponse}</ReactMarkdown>
+            </motion.div>
+          )}
+
           {/* Quick Suggestions */}
           <div className="flex flex-wrap gap-2 mt-6">
             {["Ver ROI Quinzenal", "Custo por Mensagem", "Origem de Leads", "Performance de Criativos"].map(s => (
-              <button key={s} className="px-3 py-1.5 bg-white/5 border border-white/5 rounded-lg text-[10px] font-bold text-slate-400 hover:text-white hover:border-white/20 transition-all">
+              <button
+                key={s}
+                onClick={() => handleGeminiQuery(s)}
+                className="px-3 py-1.5 bg-white/5 border border-white/5 rounded-lg text-[10px] font-bold text-slate-400 hover:text-white hover:border-blue-500/50 transition-all">
                 {s}
               </button>
             ))}

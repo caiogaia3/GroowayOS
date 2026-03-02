@@ -26,3 +26,4 @@ brain/
 
 # Turbopack - exclude Python venv symlinks
 intelligence/venv/
+google_credentials.json
