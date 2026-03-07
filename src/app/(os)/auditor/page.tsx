@@ -31,6 +31,7 @@ import { CommercialPlanPanel } from '@/features/xray/components/tabs/CommercialP
 import { saveDiagnosticAction } from '@/features/xray/actions/save-diagnostic';
 import { saveProposalAction } from '@/features/proposals/actions/save-proposal';
 import { triggerAnalysisAction } from '@/features/xray/actions/trigger-analysis';
+import { getDiagnosticById } from '@/features/xray/actions/get-diagnostic-by-id';
 
 // Hooks
 import { useXrayStatus } from '@/core/hooks/useXrayStatus';
@@ -171,6 +172,53 @@ export default function AuditorPage() {
         } else {
             setAppState('input');
             alert(`Falha ao registrar lead: ${res.error || 'Erro desconhecido'}`);
+        }
+    };
+
+    const handleLoadHistory = async (id: string) => {
+        setAppState('analyzing');
+        setProgress(30);
+        setStatusMessage('Carregando diagnóstico do histórico...');
+
+        const result = await getDiagnosticById(id);
+
+        if (result.success && result.data) {
+            setProgress(80);
+            setStatusMessage('Restaurando sessão...');
+
+            if (result.data.lead) {
+                const leadData: any = Array.isArray(result.data.lead) ? result.data.lead[0] : result.data.lead;
+                if (leadData) {
+                    setCompanyName(leadData.company_name || '');
+                    setUrl(leadData.target_url || '');
+                    setCity(leadData.city || '');
+                    setInstagram(leadData.instagram || '');
+                    setCurrentLeadId(leadData.id || null);
+                } else {
+                    setCompanyName('Histórico Recuperado');
+                }
+            } else {
+                setCompanyName('Histórico Recuperado');
+            }
+
+            setCurrentDiagId(result.data.id);
+            setReportData(result.data.reportData);
+
+            const closer = result.data.reportData?.skills_results?.find((s: any) => s.id === 'closer');
+            if (closer) setCommercialPlan(closer.findings);
+
+            const alchemist = result.data.reportData?.skills_results?.find((s: any) => s.id === 'alchemist');
+            if (alchemist) setValuePropositionData(alchemist.findings);
+
+            // Let framer-motion smooth out the transition
+            setTimeout(() => {
+                setAppState('result');
+                setProgress(100);
+            }, 500);
+
+        } else {
+            setAppState('input');
+            alert(`Falha ao carregar histórico: ${result.error}`);
         }
     };
 
@@ -319,6 +367,7 @@ export default function AuditorPage() {
             <HistoryModal
                 isOpen={showHistory}
                 onClose={() => setShowHistory(false)}
+                onSelect={handleLoadHistory}
             />
 
             <ScoreRateModal

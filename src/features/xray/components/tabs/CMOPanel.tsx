@@ -71,7 +71,7 @@ export const CMOPanel = ({ cmoSkill, getScoreBadge }: CMOPanelProps) => {
                             <Briefcase className="w-5 h-5 text-primary" />
                             Veredito Executivo
                         </h3>
-                        <p className="text-xs font-medium text-slate-400 leading-relaxed">
+                        <p className=\"text-sm font-medium text-slate-400 leading-relaxed\">
                             Análise consolidada baseada no cruzamento de dados técnicos e inteligência artificial.
                         </p>
                         <div className="pt-4 border-t border-white/5">
@@ -92,7 +92,7 @@ export const CMOPanel = ({ cmoSkill, getScoreBadge }: CMOPanelProps) => {
                                 {cmoSkill.findings.pontos_negativos_consolidados?.map((item: string, idx: number) => (
                                     <li key={idx} className="flex gap-4 group">
                                         <div className="w-1.5 h-1.5 rounded-full bg-rose-500/40 mt-2 shrink-0 group-hover:bg-rose-500 group-hover:shadow-[0_0_8px_#f43f5e] transition-all" />
-                                        <span className="text-xs text-slate-300 font-medium leading-relaxed">
+                                        <span className=\"text-sm text-slate-300 font-medium leading-relaxed\">
                                             {item.replace(/❌|✅/g, '').trim()}
                                         </span>
                                     </li>
@@ -109,7 +109,7 @@ export const CMOPanel = ({ cmoSkill, getScoreBadge }: CMOPanelProps) => {
                                 {cmoSkill.findings.pontos_positivos_consolidados?.map((item: string, idx: number) => (
                                     <li key={idx} className="flex gap-4 group">
                                         <div className="w-1.5 h-1.5 rounded-full bg-emerald-500/40 mt-2 shrink-0 group-hover:bg-emerald-500 group-hover:shadow-[0_0_8px_#10b981] transition-all" />
-                                        <span className="text-xs text-slate-100 font-bold leading-relaxed">
+                                        <span className=\"text-sm text-slate-100 font-bold leading-relaxed\">
                                             {item.replace(/❌|✅/g, '').trim()}
                                         </span>
                                     </li>

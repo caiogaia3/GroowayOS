@@ -50,7 +50,7 @@ export const PerformancePanel = ({ performanceSkill, getScoreBadge }: Performanc
             <div className="liquid-card p-12 text-center">
                 <Smartphone className="w-12 h-12 text-slate-700 mx-auto mb-4" />
                 <p className="text-slate-400 text-lg font-bold">Dados de Performance Ausentes</p>
-                <p className="text-slate-500 text-sm mt-2 font-medium">O agente de UX/SEO não conseguiu processar esta página.</p>
+                <p className=\"text-slate-500 text-base mt-2 font-medium\">O agente de UX/SEO não conseguiu processar esta página.</p>
             </div>
         );
     }
@@ -152,7 +152,7 @@ export const PerformancePanel = ({ performanceSkill, getScoreBadge }: Performanc
                         <Gauge className="w-6 h-6 text-cyan" />
                         Auditoria Clínica de UX & Performance
                     </h3>
-                    <p className="text-sm font-medium text-slate-400 mt-1">
+                    <p className=\"text-base font-medium text-slate-400 mt-1\">
                         Análise profunda de cada aspecto técnico com racional de melhoria.
                     </p>
                 </div>
@@ -226,7 +226,7 @@ export const PerformancePanel = ({ performanceSkill, getScoreBadge }: Performanc
                             <h4 className="text-[10px] font-black text-blue-400 mb-3 uppercase tracking-widest flex items-center gap-2">
                                 <FileText className="w-3.5 h-3.5" /> Content Engine
                             </h4>
-                            <p className="text-xs text-slate-300 leading-relaxed font-medium">
+                            <p className=\"text-sm text-slate-300 leading-relaxed font-medium\">
                                 {findings.blog_exploration_sample}
                             </p>
                         </div>

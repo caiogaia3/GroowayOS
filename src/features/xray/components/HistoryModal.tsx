@@ -8,9 +8,10 @@ import { getAuditHistory, AuditHistoryItem } from '../actions/get-history';
 interface HistoryModalProps {
     isOpen: boolean;
     onClose: () => void;
+    onSelect?: (id: string) => void;
 }
 
-export const HistoryModal = ({ isOpen, onClose }: HistoryModalProps) => {
+export const HistoryModal = ({ isOpen, onClose, onSelect }: HistoryModalProps) => {
     const [history, setHistory] = useState<AuditHistoryItem[]>([]);
     const [isLoading, setIsLoading] = useState(false);
 
@@ -79,7 +80,14 @@ export const HistoryModal = ({ isOpen, onClose }: HistoryModalProps) => {
                                         <button
                                             key={item.id}
                                             className="w-full text-left bg-black/40 backdrop-blur-md rounded-2xl p-5 border border-white/5 hover:border-brand-purple/50 hover:bg-brand-purple/5 hover:shadow-[0_0_20px_rgba(168,85,247,0.15)] transition-all relative overflow-hidden flex flex-col gap-4 group"
-                                            onClick={() => window.open(`/report/${item.id}`, '_blank')}
+                                            onClick={() => {
+                                                if (onSelect) {
+                                                    onSelect(item.id);
+                                                    onClose();
+                                                } else {
+                                                    window.open(`/report/${item.id}`, '_blank');
+                                                }
+                                            }}
                                         >
                                             <div className="absolute top-0 right-0 w-32 h-32 bg-brand-purple/5 rounded-full blur-[40px] opacity-0 group-hover:opacity-100 transition-opacity"></div>
 
@@ -106,7 +114,7 @@ export const HistoryModal = ({ isOpen, onClose }: HistoryModalProps) => {
                                                     {item.saved_at ? new Date(item.saved_at).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short', year: 'numeric' }) : 'Recente'}
                                                 </p>
                                                 <div className="text-[10px] uppercase tracking-wider font-bold text-brand-purple/70 group-hover:text-brand-purple flex items-center gap-1 transition-colors">
-                                                    Ver Análise
+                                                    Carregar Análise
                                                     <ArrowRight className="w-3 h-3 opacity-0 -ml-2 group-hover:opacity-100 group-hover:ml-0 transition-all" />
                                                 </div>
                                             </div>
